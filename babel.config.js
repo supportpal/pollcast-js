@@ -1,10 +1,10 @@
-{
+module.exports = {
   "plugins": ["@babel/plugin-proposal-private-methods"],
   "presets": [
     [
       "@babel/preset-env",
       {
-        "modules": false
+        "modules": "auto"
       }
     ]
   ]
