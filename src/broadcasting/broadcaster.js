@@ -67,7 +67,7 @@ class Broadcaster {
       request
         .success(function (xhr) {
           self.#parseResponse(xhr.responseText)
-          self.#timer = setTimeout(self.#poll, (self.#options.polling * 1000))
+          self.#timer = setTimeout(() => {self.#poll()}, (self.#options.polling * 1000))
         })
         .send({
           time: this.#options.time,
