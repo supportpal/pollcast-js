@@ -6,4 +6,4 @@ The frontend component to accompany [supportpal/pollcast](https://github.com/sup
 
 IE | Chrome | Firefox | Safari | Edge
 -------|-------|---------|--------|-----
-:heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
+11 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
