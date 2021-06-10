@@ -142,15 +142,17 @@ class Broadcaster {
 
       this.setTime(response.time)
 
-      for (const payload in response.payloads) {
-        if (!Object.prototype.hasOwnProperty.call(response.payloads, payload)) {
+      for (const event in response.events) {
+        if (!Object.prototype.hasOwnProperty.call(response.events, event)) {
           continue
         }
 
-        for (let i = 0; i < response.payloads[payload].channels.length; ++i) {
-          const channel = response.payloads[payload].channels[i]
-          for (let index = 0; index < this.#channels[channel].length; ++index) {
-            this.#channels[channel][index].fire(response.payloads[payload])
+        const item = response.events[event]
+        for (let i = 0; i < item.channels.length; ++i) {
+          const channel = item.channels[i]
+
+          for (let c = 0; c < this.#channels[channel].length; ++c) {
+            this.#channels[channel][c].fire(item)
           }
         }
       }
