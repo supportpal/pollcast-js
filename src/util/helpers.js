@@ -8,7 +8,7 @@ const extend = function (source, properties) {
   return source
 }
 
-const serialize = function (obj, prefix) {
+const urlEncode = function (obj, prefix) {
   const str = []
   for (const p in obj) {
     if (!Object.prototype.hasOwnProperty.call(obj, p)) {
@@ -17,7 +17,7 @@ const serialize = function (obj, prefix) {
 
     const k = prefix ? prefix + '[' + p + ']' : p; const v = obj[p]
     if (typeof v === 'object') {
-      str.push(serialize(v, k))
+      str.push(urlEncode(v, k))
     } else {
       str.push(encodeURIComponent(k) + '=' + encodeURIComponent(v))
     }
@@ -28,5 +28,5 @@ const serialize = function (obj, prefix) {
 
 export {
   extend,
-  serialize
+  urlEncode
 }

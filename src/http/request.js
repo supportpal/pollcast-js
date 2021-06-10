@@ -1,4 +1,4 @@
-import { serialize } from '../util/helpers'
+import { urlEncode } from '../util/helpers'
 
 class Request {
     #xhr
@@ -30,7 +30,7 @@ class Request {
 
     send (data) {
       if (typeof data !== 'undefined') {
-        data = serialize(data)
+        data = urlEncode(data)
       }
 
       this.#xhr.send(data || null)
