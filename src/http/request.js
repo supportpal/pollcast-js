@@ -14,7 +14,7 @@ class Request {
     success (cb) {
       const self = this
       this.#xhr.addEventListener('load', function () {
-        if (self.#xhr.readyState > 3 && self.status === 200) {
+        if (self.#xhr.readyState > 3 && self.#xhr.status === 200) {
           cb(self.#xhr)
         }
       })
