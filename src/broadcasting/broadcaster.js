@@ -75,10 +75,7 @@ class Broadcaster {
 
           self.#poll()
         })
-        .send({
-          polling: this.#options.polling,
-          _token: this.#options.token
-        })
+        .send({_token: this.#options.token})
 
       return this
     }
