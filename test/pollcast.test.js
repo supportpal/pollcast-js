@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
 describe('foo', () => {
-    it('bar', () => {
-        //
-    });
-});
+  it('bar', () => {
+    //
+  })
+})
