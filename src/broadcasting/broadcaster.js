@@ -9,7 +9,10 @@ class Broadcaster {
     #connected = false
     #events = {}
     #defaults = {
-      url: null,
+      routes: {
+          connect: '',
+          receive: ''
+      },
       polling: 5,
       token: null
     }
@@ -58,7 +61,7 @@ class Broadcaster {
 
       const self = this
 
-      const request = new Request('POST', this.#options.url + '/connect')
+      const request = new Request('POST', this.#options.routes.connect)
       request
         .success(function (xhr) {
           const response = JSON.parse(xhr.responseText)
@@ -96,7 +99,7 @@ class Broadcaster {
     #poll () {
       const self = this
 
-      const request = new Request('POST', this.#options.url + '/receive')
+      const request = new Request('POST', this.#options.routes.receive)
       request
         .success(function (xhr) {
           self.#parseResponse(xhr.responseText)
