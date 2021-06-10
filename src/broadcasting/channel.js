@@ -2,7 +2,7 @@ import { extend } from '../util/helpers'
 
 class Channel {
     #options
-    #events = {}
+    #listeners = {}
     #defaults = {
       channel: null
     }
@@ -11,21 +11,27 @@ class Channel {
       this.#options = extend(this.#defaults, options)
     }
 
+    get listeners() {
+        return this.#listeners
+    }
+
     on (event, callback) {
-      if (this.#events[event] === undefined) {
-        this.#events[event] = []
+      if (typeof this.#listeners[event] === 'undefined') {
+        this.#listeners[event] = []
       }
-      this.#events[event].push(callback)
+
+      this.#listeners[event].push(callback)
+
       return this
     }
 
     fire (event) {
-      for (const e in this.#events) {
-        if (!Object.prototype.hasOwnProperty.call(this.#events, e) || e !== event.event) {
+      for (const e in this.#listeners) {
+        if (!Object.prototype.hasOwnProperty.call(this.#listeners, e) || e !== event.event) {
           continue
         }
 
-        const func = this.#events[e]
+        const func = this.#listeners[e]
         if (event.delay !== 0) {
           setTimeout(() => { func[0](event.payload, event) }, (event.delay * 1000))
         } else {

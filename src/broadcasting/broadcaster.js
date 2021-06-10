@@ -90,9 +90,7 @@ class Broadcaster {
         }
 
         for (let i = 0; i < this.#channels[channel].length; i++) {
-          const obj = this.#channels[channel][i]
-          const events = obj.events
-          for (const key in events) {
+          for (const key in this.#channels[channel][i].listeners) {
             channelData[channel].push(key)
           }
         }
