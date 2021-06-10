@@ -7,7 +7,6 @@ class Broadcaster {
     #channels = {}
     #timer = null
     #connected = false
-    #events = {}
     #defaults = {
       routes: {
           connect: '',
@@ -21,16 +20,6 @@ class Broadcaster {
       this.#options = extend(this.#defaults, options)
     }
 
-    on (event, callback) {
-      if (typeof this.#events[event] === 'undefined') {
-        this.#events[event] = []
-      }
-
-      this.#events[event].push(callback)
-
-      return this
-    }
-
     subscribe (channel) {
       const $channel = new Channel({ channel: channel })
       if (typeof this.#channels[channel] === 'undefined') {
@@ -40,18 +29,6 @@ class Broadcaster {
       this.#channels[channel].push($channel)
 
       return $channel
-    }
-
-    fire (event, data) {
-      if (typeof this.#events[event] === 'undefined') {
-        this.#events[event] = []
-      }
-
-      for (const callback in this.#events[event]) {
-        if (Object.prototype.hasOwnProperty.call(this.#events[event], callback)) {
-          this.#events[event][callback](data)
-        }
-      }
     }
 
     connect () {
@@ -71,20 +48,10 @@ class Broadcaster {
 
           self.#connected = true
           self.setTime(response.time)
-          self.fire('connect', self)
 
           self.#poll()
         })
         .send({_token: this.#options.token})
-
-      return this
-    }
-
-    disconnect () {
-      this.#connected = false
-      clearTimeout(this.#timer)
-      this.#timer = null
-      this.fire('disconnect', this)
 
       return this
     }
