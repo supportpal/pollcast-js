@@ -1,0 +1,7 @@
+/.github/
+/src/
+/test/
+/.babelrc
+/.releaserc
+/gulpfile.js
+/jest.config.js
