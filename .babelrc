@@ -1,4 +1,5 @@
 {
+  "plugins": ["@babel/plugin-proposal-private-methods"],
   "presets": [
     [
       "@babel/preset-env",

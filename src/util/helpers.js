@@ -1,30 +1,32 @@
-const extend = function(source, properties) {
-    for (let property in properties) {
-        if (properties.hasOwnProperty(property)) {
-            source[property] = properties[property];
-        }
+const extend = function (source, properties) {
+  for (const property in properties) {
+    if (Object.prototype.hasOwnProperty.call(properties, property)) {
+      source[property] = properties[property]
     }
-    return source;
-};
+  }
 
-const serialize = function(obj, prefix) {
-    let str = [];
-    for(let p in obj) {
-        if (! obj.hasOwnProperty(p)) {
-            continue;
-        }
+  return source
+}
 
-        const k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
-        if (typeof v == "object") {
-            str.push(serialize(v, k))
-        } else {
-            str.push(encodeURIComponent(k) + "=" + encodeURIComponent(v))
-        }
+const serialize = function (obj, prefix) {
+  const str = []
+  for (const p in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, p)) {
+      continue
     }
-    return str.join("&");
+
+    const k = prefix ? prefix + '[' + p + ']' : p; const v = obj[p]
+    if (typeof v === 'object') {
+      str.push(serialize(v, k))
+    } else {
+      str.push(encodeURIComponent(k) + '=' + encodeURIComponent(v))
+    }
+  }
+
+  return str.join('&')
 }
 
 export {
-    extend,
-    serialize
+  extend,
+  serialize
 }

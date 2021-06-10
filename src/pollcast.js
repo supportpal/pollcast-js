@@ -1,4 +1,4 @@
-import Broadcaster from "./broadcasting/broadcaster";
+import Broadcaster from './broadcasting/broadcaster'
 
 const Pollcast = Broadcaster
 Pollcast.default = Pollcast
