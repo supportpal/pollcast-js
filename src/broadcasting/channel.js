@@ -31,12 +31,7 @@ class Channel {
           continue
         }
 
-        const func = this.#listeners[e]
-        if (event.delay !== 0) {
-          setTimeout(() => { func[0](event.payload, event) }, (event.delay * 1000))
-        } else {
-          func[0](event.payload, event)
-        }
+        this.#listeners[e][0](event.payload, event)
       }
     }
 }
