@@ -1,4 +1,4 @@
-import {Connector} from "./broadcasting/connector";
+import { Connector } from './broadcasting/connector'
 
 const PollcastConnector = Connector
 

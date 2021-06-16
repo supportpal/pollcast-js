@@ -5,7 +5,7 @@ const urlEncode = function (obj: object, prefix?: string): string {
       continue
     }
 
-    const k = prefix ? prefix + '[' + p + ']' : p;
+    const k = prefix ? prefix + '[' + p + ']' : p
     const v = obj[p]
     if (typeof v === 'object') {
       str.push(urlEncode(v, k))

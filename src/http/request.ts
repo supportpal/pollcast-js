@@ -1,4 +1,4 @@
-import {urlEncode} from "../util/helpers";
+import { urlEncode } from '../util/helpers'
 
 export class Request {
     private xhr: XMLHttpRequest
