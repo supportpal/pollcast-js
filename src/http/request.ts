@@ -36,4 +36,8 @@ export class Request {
 
       this.xhr.send(encodedData || null)
     }
+
+    abort () : void {
+        this.xhr.abort()
+    }
 }

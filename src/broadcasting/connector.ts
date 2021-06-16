@@ -2,12 +2,24 @@ import { Connector as BaseConnector } from 'laravel-echo/src/connector'
 import { Channel } from './channels/channel'
 import { PrivateChannel } from './channels/private-channel'
 import { PresenceChannel } from './channels/presence-channel'
+import {Socket} from "../http/socket";
 
 export class Connector extends BaseConnector {
     /**
-     * The Socket.io connection instance.
+     * Default connector options.
      */
-    socket: any;
+    private defaults = {
+        routes: {
+            connect: '',
+            receive: '',
+        },
+        polling: 5000
+    }
+
+    /**
+     * The socket instance.
+     */
+    socket: Socket | undefined
 
     /**
      * All of the subscribed channel names.
@@ -15,18 +27,21 @@ export class Connector extends BaseConnector {
     channels: { [name: string]: Channel } = {};
 
     /**
+     * Merge the custom options with the defaults.
+     */
+    protected setOptions(options: any): any {
+        super.setOptions(options)
+
+        this.options = Object.assign(this.defaults, this.options)
+
+        return options;
+    }
+
+    /**
      * Create a fresh Socket.io connection.
      */
     connect (): void {
-      this.socket = {}
-
-      this.socket.on('reconnect', () => {
-        Object.values(this.channels).forEach((channel) => {
-          channel.subscribe()
-        })
-      })
-
-      return this.socket
+        this.socket = new Socket(this.options, this.csrfToken())
     }
 
     /**
@@ -99,13 +114,15 @@ export class Connector extends BaseConnector {
      * Get the socket ID for the connection.
      */
     socketId (): string {
-      return this.socket.id
+      return this.socket ? this.socket.id : ''
     }
 
     /**
      * Disconnect Socketio connection.
      */
     disconnect (): void {
-      this.socket.disconnect()
+        if (this.socket instanceof Socket) {
+            this.socket.disconnect()
+        }
     }
 }

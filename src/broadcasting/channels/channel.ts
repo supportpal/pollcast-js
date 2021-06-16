@@ -1,5 +1,6 @@
 import { Channel as BaseChannel } from 'laravel-echo/src/channel/channel'
 import { EventFormatter } from 'laravel-echo/src/util/event-formatter'
+import {Socket} from "../../http/socket";
 
 /**
  * This class represents a Socket.io channel.
@@ -8,7 +9,7 @@ export class Channel extends BaseChannel {
     /**
      * The Socket.io client instance.
      */
-    socket: any;
+    socket: Socket;
 
     /**
      * The name of the channel.
@@ -26,16 +27,6 @@ export class Channel extends BaseChannel {
     eventFormatter: EventFormatter;
 
     /**
-     * The event callbacks applied to the socket.
-     */
-    events: any = {};
-
-    /**
-     * User supplied callbacks for events on this channel.
-     */
-    private listeners: any = {};
-
-    /**
      * Create a new class instance.
      */
     constructor (socket: any, name: string, options: any) {
@@ -50,32 +41,24 @@ export class Channel extends BaseChannel {
     }
 
     /**
-     * Subscribe to a Socket.io channel.
+     * Subscribe to a channel.
      */
     subscribe (): void {
-      this.socket.emit('subscribe', {
-        channel: this.name,
-        auth: this.options.auth || {}
-      })
+        this.socket.subscribe(this.name)
     }
 
     /**
-     * Unsubscribe from channel and ubind event callbacks.
+     * Unsubscribe from channel.
      */
     unsubscribe (): void {
-      this.unbind()
-
-      this.socket.emit('unsubscribe', {
-        channel: this.name,
-        auth: this.options.auth || {}
-      })
+      this.socket.unsubscribe(this.name)
     }
 
     /**
      * Listen for an event on the channel instance.
      */
     listen (event: string, callback: Function): Channel {
-      this.on(this.eventFormatter.format(event), callback)
+        this.socket.on(this.name, this.eventFormatter.format(event), callback)
 
       return this
     }
@@ -84,7 +67,7 @@ export class Channel extends BaseChannel {
      * Stop listening for an event on the channel instance.
      */
     stopListening (event: string, callback?: Function): Channel {
-      this.unbindEvent(this.eventFormatter.format(event), callback)
+      this.socket.off(this.name, this.eventFormatter.format(event), callback)
 
       return this
     }
@@ -93,10 +76,7 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime a subscription succeeds.
      */
     subscribed (callback: Function): Channel {
-      this.on('connect', (socket: any) => {
-        callback(socket)
-      })
-
+        // todo
       return this
     }
 
@@ -104,57 +84,7 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime an error occurs.
      */
     error (callback: Function): Channel {
+        // todo
       return this
-    }
-
-    /**
-     * Bind the channel's socket to an event and store the callback.
-     */
-    on (event: string, callback: Function): Channel {
-      this.listeners[event] = this.listeners[event] || []
-
-      if (!this.events[event]) {
-        this.events[event] = (channel: string, data: any) => {
-          if (this.name === channel && this.listeners[event]) {
-            this.listeners[event].forEach((cb: Function) => cb(data))
-          }
-        }
-
-        this.socket.on(event, this.events[event])
-      }
-
-      this.listeners[event].push(callback)
-
-      return this
-    }
-
-    /**
-     * Unbind the channel's socket from all stored event callbacks.
-     */
-    unbind (): void {
-      Object.keys(this.events).forEach((event) => {
-        this.unbindEvent(event)
-      })
-    }
-
-    /**
-     * Unbind the listeners for the given event.
-     */
-    protected unbindEvent (event: string, callback?: Function): void {
-      this.listeners[event] = this.listeners[event] || []
-
-      if (callback) {
-        this.listeners[event] = this.listeners[event].filter((cb: Function) => cb !== callback)
-      }
-
-      if (!callback || this.listeners[event].length === 0) {
-        if (this.events[event]) {
-          this.socket.removeListener(event, this.events[event])
-
-          delete this.events[event]
-        }
-
-        delete this.listeners[event]
-      }
     }
 }
