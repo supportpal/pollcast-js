@@ -1,11 +1,6 @@
 module.exports = {
-  "plugins": ["@babel/plugin-proposal-private-methods"],
   "presets": [
-    [
-      "@babel/preset-env",
-      {
-        "modules": "auto"
-      }
-    ]
+    ["@babel/preset-env", {"modules": "auto"}],
+    "@babel/preset-typescript",
   ]
 }

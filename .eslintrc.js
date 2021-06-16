@@ -1,5 +1,4 @@
 module.exports = {
-  "plugins": ["jest"],
   env: {
     browser: true,
     es2021: true,
@@ -8,11 +7,15 @@ module.exports = {
   extends: [
     'standard'
   ],
-  "parser": "@babel/eslint-parser",
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 12,
     sourceType: 'module'
   },
+  plugins: [
+    '@typescript-eslint',
+    'jest'
+  ],
   rules: {
   }
 }

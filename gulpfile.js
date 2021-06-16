@@ -1,11 +1,10 @@
 const gulp = require('gulp')
-const rollup = require('gulp-rollup')
-const babel = require('rollup-plugin-babel')
-const json = require('@rollup/plugin-json')
+const rollup = require('rollup');
+const {babel} = require('@rollup/plugin-babel')
+const typescript = require('@rollup/plugin-typescript')
 const uglify = require('gulp-uglify')
 const rename = require('gulp-rename')
 const gulpif = require('gulp-if')
-const log = require('fancy-log')
 
 const packageJson = require('./package.json')
 const version = process.env.VERSION || packageJson.version
@@ -15,42 +14,32 @@ const banner = `/*!
 * Released under the ${packageJson.license} License.
 */`
 
-const srcScriptFiles = ['src/**/*.js']
-
-const continueOnError = process.argv.includes('--continue-on-error')
 const skipMinification = process.argv.includes('--skip-minification')
 
-gulp.task('build', () => {
-  return gulp.src(['package.json', ...srcScriptFiles])
-    .pipe(rollup({
+gulp.task('build', gulp.series(
+  () => {
+    return rollup.rollup({
+      input: 'src/pollcast.ts',
       plugins: [
-        json(),
+        typescript(),
         babel({
-          exclude: 'node_modules/**'
+          babelHelpers: 'bundled',
+          extensions: ['.js', '.jsx', '.es6', '.es', '.mjs', '.ts', '.tsx']
         })
-      ],
-      input: 'src/pollcast.js',
-      output: {
+      ]
+    }).then(bundle => {
+      return bundle.write({
+        file: './dist/pollcast.js',
         format: 'umd',
         name: 'Pollcast',
         banner: banner
-      },
-      // https://github.com/rollup/rollup/issues/2271
-      onwarn (warning, rollupWarn) {
-        if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-          rollupWarn(warning)
-        }
-      }
-    }))
-    .on('error', (error) => {
-      if (continueOnError) {
-        log(error)
-      } else {
-        throw error
-      }
+      });
     })
-    .pipe(gulp.dest('dist'))
-    .pipe(gulpif(!skipMinification, uglify()))
-    .pipe(gulpif(!skipMinification, rename('pollcast.min.js')))
-    .pipe(gulpif(!skipMinification, gulp.dest('dist')))
-})
+  },
+  () => {
+    return gulp.src('dist/pollcast.js')
+      .pipe(gulpif(!skipMinification, uglify()))
+      .pipe(gulpif(!skipMinification, rename('pollcast.min.js')))
+      .pipe(gulpif(!skipMinification, gulp.dest('dist')))
+  }
+));
