@@ -93,7 +93,7 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime a subscription succeeds.
      */
     subscribed (callback: Function): Channel {
-      this.on('connect', (socket) => {
+      this.on('connect', (socket: any) => {
         callback(socket)
       })
 
@@ -114,9 +114,9 @@ export class Channel extends BaseChannel {
       this.listeners[event] = this.listeners[event] || []
 
       if (!this.events[event]) {
-        this.events[event] = (channel, data) => {
+        this.events[event] = (channel: string, data: any) => {
           if (this.name === channel && this.listeners[event]) {
-            this.listeners[event].forEach((cb) => cb(data))
+            this.listeners[event].forEach((cb: Function) => cb(data))
           }
         }
 
@@ -144,7 +144,7 @@ export class Channel extends BaseChannel {
       this.listeners[event] = this.listeners[event] || []
 
       if (callback) {
-        this.listeners[event] = this.listeners[event].filter((cb) => cb !== callback)
+        this.listeners[event] = this.listeners[event].filter((cb: Function) => cb !== callback)
       }
 
       if (!callback || this.listeners[event].length === 0) {

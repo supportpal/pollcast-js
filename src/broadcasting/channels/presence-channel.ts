@@ -17,7 +17,7 @@ export class PresenceChannel extends PrivateChannel implements Channel {
    * Listen for someone joining the channel.
    */
   joining (callback: Function): PresenceChannel {
-    this.on('presence:joining', (member) => callback(member.user_info))
+    this.on('presence:joining', (member: any) => callback(member.user_info))
 
     return this
   }
@@ -26,7 +26,7 @@ export class PresenceChannel extends PrivateChannel implements Channel {
    * Listen for someone leaving the channel.
    */
   leaving (callback: Function): PresenceChannel {
-    this.on('presence:leaving', (member) => callback(member.user_info))
+    this.on('presence:leaving', (member: any) => callback(member.user_info))
 
     return this
   }
