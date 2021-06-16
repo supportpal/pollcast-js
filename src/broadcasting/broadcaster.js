@@ -113,12 +113,10 @@ class Broadcaster {
         }
 
         const item = response.events[event]
-        for (let i = 0; i < item.channels.length; ++i) {
-          const channel = item.channels[i]
+        const channel = item.channel
 
-          for (let c = 0; c < this.#channels[channel].length; ++c) {
-            this.#channels[channel][c].fire(item)
-          }
+        for (let c = 0; c < this.#channels[channel].length; ++c) {
+          this.#channels[channel][c].fire(item)
         }
       }
     }
