@@ -9,7 +9,6 @@ class Broadcaster {
     #connected = false
     #defaults = {
       routes: {
-          connect: '',
           receive: ''
       },
       polling: 5,
@@ -36,22 +35,8 @@ class Broadcaster {
         return
       }
 
-      const self = this
-
-      const request = new Request('POST', this.#options.routes.connect)
-      request
-        .success(function (xhr) {
-          const response = JSON.parse(xhr.responseText)
-          if (response.status !== 'success') {
-            return
-          }
-
-          self.#connected = true
-          self.setTime(response.time)
-
-          self.#poll()
-        })
-        .send({_token: this.#options.token})
+      this.#connected = true
+      this.#poll()
 
       return this
     }
@@ -70,7 +55,7 @@ class Broadcaster {
           self.#timer = setTimeout(() => {self.#poll()}, (self.#options.polling * 1000))
         })
         .send({
-          time: this.#options.time,
+          time: this.#options.time || '1970-01-01 00:00:00',
           channels: this.#channelData(),
           _token: this.#options.token
         })
