@@ -21,7 +21,9 @@ gulp.task('build', gulp.series(
     return rollup.rollup({
       input: 'src/pollcast.ts',
       plugins: [
+        // convert typescript to ecmascript
         typescript(),
+        // transpile es6 to es5
         babel({
           babelHelpers: 'bundled',
           extensions: ['.js', '.jsx', '.es6', '.es', '.mjs', '.ts', '.tsx']
