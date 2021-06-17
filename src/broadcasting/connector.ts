@@ -6,17 +6,6 @@ import { Socket } from '../http/socket'
 
 export class Connector extends BaseConnector {
     /**
-     * Default connector options.
-     */
-    private defaults = {
-      routes: {
-        connect: '',
-        receive: ''
-      },
-      polling: 5000
-    }
-
-    /**
      * The socket instance.
      */
     socket: Socket | undefined
@@ -32,7 +21,13 @@ export class Connector extends BaseConnector {
     protected setOptions (options: any): any {
       super.setOptions(options)
 
-      this.options = Object.assign(this.defaults, this.options)
+      this.options = Object.assign({
+        routes: {
+          connect: '',
+          receive: ''
+        },
+        polling: 5000
+      }, this.options)
 
       return options
     }
