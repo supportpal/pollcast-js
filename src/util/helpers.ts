@@ -1,4 +1,4 @@
-const urlEncode = function (obj: object, prefix?: string): string {
+const urlEncode = function (obj: any, prefix?: string): string {
   const str = []
   for (const p in obj) {
     if (!Object.prototype.hasOwnProperty.call(obj, p)) {
