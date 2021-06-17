@@ -1,11 +1,13 @@
-import {open, send, setRequestHeader, addEventListener, abort} from './__mocks__/xhr-mock'
+import { open, send, setRequestHeader, addEventListener, abort } from './__mocks__/xhr-mock'
 import { Request } from '../../src/http/request'
 
 describe('Request', () => {
   afterEach(() => jest.clearAllMocks())
 
   it('opens xhr and sets headers', () => {
-    const request = new Request('GET', 'some/url')
+    /* eslint-disable no-new */
+    new Request('GET', 'some/url')
+    /* eslint-enable no-new */
 
     expect(open).toHaveBeenCalledWith('GET', 'some/url')
     expect(setRequestHeader.mock.calls.length).toBe(2)
