@@ -17,5 +17,7 @@ module.exports = {
     'jest'
   ],
   rules: {
+    "indent": "off",
+    "@typescript-eslint/indent": ["error", 2]
   }
 }

@@ -3,7 +3,7 @@ import { PrivateChannel } from './private-channel'
 
 export class PresenceChannel extends PrivateChannel implements Channel {
   /**
-   * Register a callback to be called anytime the member list changes.
+   * Listen for when you've successfully joined a channel.
    */
   here (callback: Function): PresenceChannel {
     this.socket.on(this.name, 'pollcast:subscription_succeeded', (members: any[]) => {
