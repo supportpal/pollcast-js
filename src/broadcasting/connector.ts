@@ -37,6 +37,7 @@ export class Connector extends BaseConnector {
      */
     connect (): void {
       this.socket = new Socket(this.options, this.csrfToken())
+      this.socket.connect()
     }
 
     /**
