@@ -138,7 +138,7 @@ export class Socket {
         const item = response.events[event]
 
         if (!Object.hasOwnProperty.call(this.channels, item.channel) ||
-                !Object.hasOwnProperty.call(this.channels[item.channel], item.event)
+            !Object.hasOwnProperty.call(this.channels[item.channel], item.event)
         ) {
           continue
         }
