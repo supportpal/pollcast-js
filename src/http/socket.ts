@@ -108,7 +108,7 @@ export class Socket {
      * Publish a message from the client to the server.
      */
     emit (channel: string, event: string, data: any): void {
-        // todo publish message from client to server
+      // todo publish message from client to server
     }
 
     /**
