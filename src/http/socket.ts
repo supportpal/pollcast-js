@@ -145,7 +145,7 @@ export class Socket {
 
         const events = this.channels[item.channel][item.event]
         for (let i = 0; i < events.length; i++) {
-          events[i](item)
+          events[i](item.payload)
         }
       }
     }
