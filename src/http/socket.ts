@@ -36,6 +36,9 @@ export class Socket {
       this.options.csrfToken = csrfToken
     }
 
+    /**
+     * Connect to the server, start xhr-polling.
+     */
     connect (): void {
       const self = this
       this.request = new Request('POST', this.options.routes.connect)
@@ -53,16 +56,25 @@ export class Socket {
         .send({ _token: this.options.csrfToken })
     }
 
+    /**
+     * Join a channel.
+     */
     subscribe (channel: string): void {
       if (!Object.hasOwnProperty.call(this.channels, channel)) {
         this.channels[channel] = {}
       }
     }
 
+    /**
+     * Leave a channel.
+     */
     unsubscribe (channel: string): void {
       delete this.channels[channel]
     }
 
+    /**
+     * Listen for an event on the channel.
+     */
     on (channel: string, event: string, callback: Function): void {
       if (!Object.hasOwnProperty.call(this.channels, channel)) {
         return
@@ -75,6 +87,9 @@ export class Socket {
       this.channels[channel][event].push(callback)
     }
 
+    /**
+     * Stop listening for a given event on the channel.
+     */
     off (channel: string, event: string, callback?: Function): void {
       if (!Object.hasOwnProperty.call(this.channels, channel) ||
             !Object.hasOwnProperty.call(this.channels[channel], event)
@@ -89,6 +104,16 @@ export class Socket {
       }
     }
 
+    /**
+     * Publish a message from the client to the server.
+     */
+    emit (channel: string, event: string, data: any): void {
+        // todo publish message from client to server
+    }
+
+    /**
+     * Disconnect the client from the server.
+     */
     disconnect (): void {
       if (this.request instanceof Request) {
         this.request.abort()
