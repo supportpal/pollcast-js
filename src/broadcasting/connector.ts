@@ -25,7 +25,9 @@ export class Connector extends BaseConnector {
       routes: {
         connect: '',
         receive: '',
-        publish: ''
+        publish: '',
+        subscribe: '',
+        unsubscribe: ''
       },
       polling: 5000
     }, this.options)

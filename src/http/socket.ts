@@ -60,16 +60,32 @@ export class Socket {
    * Join a channel.
    */
   subscribe (channel: string): void {
-    if (!Object.hasOwnProperty.call(this.channels, channel)) {
-      this.channels[channel] = {}
+    if (Object.hasOwnProperty.call(this.channels, channel)) {
+      return
     }
+
+    const self = this
+    const request = new Request('POST', this.options.routes.subscribe)
+    request
+      .success(() => self.channels[channel] = {})
+      .send({
+        channel_name: channel,
+        _token: this.options.csrfToken
+      })
   }
 
   /**
    * Leave a channel.
    */
   unsubscribe (channel: string): void {
-    delete this.channels[channel]
+    const self = this
+    const request = new Request('POST', this.options.routes.unsubscribe)
+    request
+        .success(() => delete self.channels[channel])
+        .send({
+          channel_name: channel,
+          _token: this.options.csrfToken
+        })
   }
 
   /**
