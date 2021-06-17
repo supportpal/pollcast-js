@@ -24,3 +24,6 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+      - name: Check bundle size
+        run: npm run bundlewatch
