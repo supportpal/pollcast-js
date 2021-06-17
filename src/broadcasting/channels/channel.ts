@@ -1,6 +1,6 @@
 import { Channel as BaseChannel } from 'laravel-echo/src/channel/channel'
 import { EventFormatter } from 'laravel-echo/src/util/event-formatter'
-import {Socket} from "../../http/socket";
+import { Socket } from '../../http/socket'
 
 /**
  * This class represents a Socket.io channel.
@@ -49,8 +49,8 @@ export class Channel extends BaseChannel {
      * Subscribe to a channel.
      */
     subscribe (): void {
-        this.socket.subscribe(this.name)
-        this.fire(this.subscribedEvents)
+      this.socket.subscribe(this.name)
+      this.fire(this.subscribedEvents)
     }
 
     /**
@@ -64,7 +64,7 @@ export class Channel extends BaseChannel {
      * Listen for an event on the channel instance.
      */
     listen (event: string, callback: Function): Channel {
-        this.socket.on(this.name, this.eventFormatter.format(event), callback)
+      this.socket.on(this.name, this.eventFormatter.format(event), callback)
 
       return this
     }
@@ -82,7 +82,8 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime a subscription succeeds.
      */
     subscribed (callback: Function): Channel {
-        this.subscribedEvents.push(callback)
+      this.subscribedEvents.push(callback)
+
       return this
     }
 
@@ -99,10 +100,10 @@ export class Channel extends BaseChannel {
      * @param {Function[]} events
      * @private
      */
-    private fire(events: Function[]): void {
-        const len = events.length;
-        for (let i = 0; i < len; i++) {
-            events[i](this.socket)
-        }
+    private fire (events: Function[]): void {
+      const len = events.length
+      for (let i = 0; i < len; i++) {
+        events[i](this.socket)
+      }
     }
 }

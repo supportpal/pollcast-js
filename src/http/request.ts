@@ -38,6 +38,6 @@ export class Request {
     }
 
     abort () : void {
-        this.xhr.abort()
+      this.xhr.abort()
     }
 }

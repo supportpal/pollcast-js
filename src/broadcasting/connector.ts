@@ -2,18 +2,18 @@ import { Connector as BaseConnector } from 'laravel-echo/src/connector'
 import { Channel } from './channels/channel'
 import { PrivateChannel } from './channels/private-channel'
 import { PresenceChannel } from './channels/presence-channel'
-import {Socket} from "../http/socket";
+import { Socket } from '../http/socket'
 
 export class Connector extends BaseConnector {
     /**
      * Default connector options.
      */
     private defaults = {
-        routes: {
-            connect: '',
-            receive: '',
-        },
-        polling: 5000
+      routes: {
+        connect: '',
+        receive: ''
+      },
+      polling: 5000
     }
 
     /**
@@ -29,19 +29,19 @@ export class Connector extends BaseConnector {
     /**
      * Merge the custom options with the defaults.
      */
-    protected setOptions(options: any): any {
-        super.setOptions(options)
+    protected setOptions (options: any): any {
+      super.setOptions(options)
 
-        this.options = Object.assign(this.defaults, this.options)
+      this.options = Object.assign(this.defaults, this.options)
 
-        return options;
+      return options
     }
 
     /**
      * Create a fresh Socket.io connection.
      */
     connect (): void {
-        this.socket = new Socket(this.options, this.csrfToken())
+      this.socket = new Socket(this.options, this.csrfToken())
     }
 
     /**
@@ -121,8 +121,8 @@ export class Connector extends BaseConnector {
      * Disconnect Socketio connection.
      */
     disconnect (): void {
-        if (this.socket instanceof Socket) {
-            this.socket.disconnect()
-        }
+      if (this.socket instanceof Socket) {
+        this.socket.disconnect()
+      }
     }
 }
