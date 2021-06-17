@@ -112,7 +112,7 @@ export class Socket {
       this.request
         .success(function (xhr: XMLHttpRequest) {
           self.fireEvents(xhr.responseText)
-          self.timer = setTimeout(self.poll, self.options.polling)
+          self.timer = setTimeout(() => self.poll(), self.options.polling)
         })
         .send({
           time: this.date,
