@@ -1,6 +1,4 @@
-'use strict'
-
-import { urlEncode } from '../src/util/helpers'
+import { urlEncode } from '../../src/util/helpers'
 
 describe('url encode', () => {
   it('string', () => {

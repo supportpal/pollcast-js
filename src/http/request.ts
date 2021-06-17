@@ -4,7 +4,7 @@ export class Request {
     private xhr: XMLHttpRequest
 
     constructor (method: string, url: string) {
-      this.xhr = new XMLHttpRequest()
+      this.xhr = new window.XMLHttpRequest()
       this.xhr.open(method, url)
 
       this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
