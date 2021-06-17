@@ -27,6 +27,11 @@ export class Channel extends BaseChannel {
     eventFormatter: EventFormatter;
 
     /**
+     * List of
+     */
+    private subscribedEvents: Function[] = []
+
+    /**
      * Create a new class instance.
      */
     constructor (socket: any, name: string, options: any) {
@@ -45,6 +50,7 @@ export class Channel extends BaseChannel {
      */
     subscribe (): void {
         this.socket.subscribe(this.name)
+        this.fire(this.subscribedEvents)
     }
 
     /**
@@ -76,7 +82,7 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime a subscription succeeds.
      */
     subscribed (callback: Function): Channel {
-        // todo
+        this.subscribedEvents.push(callback)
       return this
     }
 
@@ -84,7 +90,19 @@ export class Channel extends BaseChannel {
      * Register a callback to be called anytime an error occurs.
      */
     error (callback: Function): Channel {
-        // todo
       return this
+    }
+
+    /**
+     * Run all events callbacks.
+     *
+     * @param {Function[]} events
+     * @private
+     */
+    private fire(events: Function[]): void {
+        const len = events.length;
+        for (let i = 0; i < len; i++) {
+            events[i](this.socket)
+        }
     }
 }
