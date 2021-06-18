@@ -64,10 +64,9 @@ export class Socket {
       return
     }
 
-    const self = this
+    this.channels[channel] = {}
     const request = new Request('POST', this.options.routes.subscribe)
     request
-      .success(() => self.channels[channel] = {})
       .send({
         channel_name: channel,
         _token: this.options.csrfToken
@@ -81,11 +80,11 @@ export class Socket {
     const self = this
     const request = new Request('POST', this.options.routes.unsubscribe)
     request
-        .success(() => delete self.channels[channel])
-        .send({
-          channel_name: channel,
-          _token: this.options.csrfToken
-        })
+      .success(() => delete self.channels[channel])
+      .send({
+        channel_name: channel,
+        _token: this.options.csrfToken
+      })
   }
 
   /**
@@ -125,12 +124,13 @@ export class Socket {
    */
   emit (channel: string, event: string, data: any): void {
     const request = new Request('POST', this.options.routes.publish)
-    request.send({
-      channel_name: channel,
-      event: event,
-      data: data,
-      _token: this.options.csrfToken
-    })
+    request
+      .send({
+        channel_name: channel,
+        event: event,
+        data: data,
+        _token: this.options.csrfToken
+      })
   }
 
   /**
