@@ -182,14 +182,15 @@ export class Socket {
       }
 
       const item = response.events[event]
+      const channel = item.channel.name
 
-      if (!Object.hasOwnProperty.call(this.channels, item.channel) ||
-            !Object.hasOwnProperty.call(this.channels[item.channel], item.event)
+      if (!Object.hasOwnProperty.call(this.channels, channel) ||
+            !Object.hasOwnProperty.call(this.channels[channel], item.event)
       ) {
         continue
       }
 
-      const events = this.channels[item.channel][item.event]
+      const events = this.channels[channel][item.event]
       for (let i = 0; i < events.length; i++) {
         events[i](item.payload)
       }
