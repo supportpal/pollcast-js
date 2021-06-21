@@ -157,7 +157,6 @@ export class Socket {
 
     this.request = new Request('POST', this.options.routes.receive)
     this.request
-      .setRequestHeader('X-Socket-ID', this.id)
       .success(function (xhr: XMLHttpRequest) {
         self.fireEvents(xhr.responseText)
         self.timer = setTimeout(() => self.poll(), self.options.polling)
