@@ -1,4 +1,4 @@
-name: test
+name: ci
 
 on:
   push:
@@ -27,3 +27,14 @@ jobs:
 
       - name: Check bundle size
         run: npm run bundlewatch
+
+      - name: Run semantic-release
+        if: ${{ github.ref == 'ref/head/master' }}
+        uses: cycjimmy/semantic-release-action@v2
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
