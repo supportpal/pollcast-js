@@ -3,7 +3,7 @@
   "version": "0.0.0-semantic-release",
   "description": "",
   "repository": {
-    "url": "github.com/supportpal/pollcast-js/"
+    "url": "https://github.com/supportpal/pollcast-js/"
   },
   "main": "dist/pollcast.js",
   "browser": "dist/pollcast.js",
