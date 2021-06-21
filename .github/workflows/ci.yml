@@ -29,7 +29,6 @@ jobs:
         run: npm run bundlewatch
 
       - name: Run semantic-release
-        if: ${{ github.ref == 'ref/head/master' }}
         uses: cycjimmy/semantic-release-action@v2
         with:
           extra_plugins: |
