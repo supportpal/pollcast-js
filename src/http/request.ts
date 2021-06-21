@@ -22,6 +22,15 @@ export class Request {
     return this
   }
 
+  always (cb: Function): Request {
+    const self = this
+    this.xhr.addEventListener('loadend', function (e) {
+      cb(self.xhr, e)
+    })
+
+    return this
+  }
+
   setRequestHeader (name: string, value: string): Request {
     this.xhr.setRequestHeader(name, value)
 

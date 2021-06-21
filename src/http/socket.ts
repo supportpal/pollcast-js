@@ -157,8 +157,8 @@ export class Socket {
 
     this.request = new Request('POST', this.options.routes.receive)
     this.request
-      .success(function (xhr: XMLHttpRequest) {
-        self.fireEvents(xhr.responseText)
+      .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
+      .always(() => {
         self.timer = setTimeout(() => self.poll(), self.options.polling)
       })
       .send({
