@@ -70,10 +70,10 @@ describe('Request', () => {
   it('runs always callback', (done) => {
     const request = new Request('GET', 'some/url')
     request
-        .always(function () {
-          done()
-        })
-        .send()
+      .always(function () {
+        done()
+      })
+      .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()

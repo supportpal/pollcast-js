@@ -1,131 +1,135 @@
-import { mocked } from 'ts-jest/utils';
-import {Socket} from "../../src/http/socket";
-import {Request} from "../../src/http/request";
+import { mocked } from 'ts-jest/utils'
+import { Socket } from '../../src/http/socket'
+import { Request } from '../../src/http/request'
 
 jest.mock('../../src/http/request', () => {
-    return {
-        Request: jest.fn()
-    }
+  return {
+    Request: jest.fn()
+  }
 })
 
 describe('constructor', () => {
-    it('initialises', () => {
-        expect(new Socket({}, 'foo')).toBeInstanceOf(Socket)
-    })
+  it('initialises', () => {
+    expect(new Socket({}, 'foo')).toBeInstanceOf(Socket)
+  })
 })
 
 describe('connect', () => {
-    const request = mocked(Request, true)
+  const request = mocked(Request, true)
 
-    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll');
-    pollSpy.mockImplementation(() => {});
+  const pollSpy = jest.spyOn(Socket.prototype as any, 'poll')
+  pollSpy.mockImplementation(() => {})
 
-    beforeEach(() => {
-        request.mockClear()
-        pollSpy.mockClear()
-    });
+  beforeEach(() => {
+    request.mockClear()
+    pollSpy.mockClear()
+  })
 
-    it('sends request', () => {
-        const mockSend = jest.fn();
-        request.mockImplementation(() : any => {
-            return {
-                success: jest.fn(function (this: Request, cb) {
-                    cb({responseText: '{"status": "success", "time": "1", "id": 1}'})
+  it('sends request', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{"status": "success", "time": "1", "id": 1}' }
+          cb(xhr)
 
-                    return this
-                }),
-                send: mockSend
-            }
-        })
-
-        const token = 'foo', route = '/connect'
-        const socket = new Socket({routes: {connect: route}}, token);
-        socket.connect()
-
-        expect(request).toHaveBeenCalledWith('POST', route)
-        expect(mockSend).toHaveBeenCalledWith({_token: token})
+          return this
+        }),
+        send: mockSend
+      }
     })
 
-    it('runs success callback', () => {
-        request.mockImplementation(() : any => {
-            return {
-                success: jest.fn(function (this: Request, cb) {
-                    cb({responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": 1}'})
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.connect()
 
-                    return this
-                }),
-                send: jest.fn()
-            }
-        })
+    expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockSend).toHaveBeenCalledWith({ _token: token })
+  })
 
-        const token = 'foo', route = '/connect'
-        const socket = new Socket({routes: {connect: route}}, token);
-        socket.connect()
+  it('runs success callback', () => {
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": 1}' }
+          cb(xhr)
 
-        expect(socket.id).toEqual(1)
-        expect(pollSpy).toBeCalledTimes(1)
+          return this
+        }),
+        send: jest.fn()
+      }
     })
 
-    it('exits when returns unexpected response', () => {
-        request.mockImplementation(() : any => {
-            return {
-                success: jest.fn(function (this: Request, cb) {
-                    cb({responseText: '{}'})
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.connect()
 
-                    return this
-                }),
-                send: jest.fn()
-            }
-        })
+    expect(socket.id).toEqual(1)
+    expect(pollSpy).toBeCalledTimes(1)
+  })
 
-        const token = 'foo', route = '/connect'
-        const socket = new Socket({routes: {connect: route}}, token);
-        socket.connect()
+  it('exits when returns unexpected response', () => {
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{}' }
+          cb(xhr)
 
-        expect(pollSpy).toBeCalledTimes(0)
-        expect(socket.id).toEqual('')
+          return this
+        }),
+        send: jest.fn()
+      }
     })
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.connect()
+
+    expect(pollSpy).toBeCalledTimes(0)
+    expect(socket.id).toEqual('')
+  })
 })
 
 describe('subscribe', () => {
-    const request = mocked(Request, true)
+  const request = mocked(Request, true)
 
-    beforeEach(() => request.mockClear());
+  beforeEach(() => request.mockClear())
 
-    it('sends request', () => {
-        const mockSend = jest.fn()
-        request.mockImplementation(() : any => {
-            return {
-                success: jest.fn(function (this: Request, cb) {
-                    cb({responseText: '{}'})
+  it('sends request', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{}' }
+          cb(xhr)
 
-                    return this
-                }),
-                send: mockSend
-            }
-        })
-
-        const token = 'foo', route = '/subscribe', channel = 'channel1'
-        const socket = new Socket({routes: {subscribe: route}}, token);
-        socket.subscribe(channel)
-
-        expect(request).toHaveBeenCalledWith('POST', route)
-        expect(mockSend).toHaveBeenCalledWith({_token: token, channel_name: channel})
-        expect(socket.subscribed).toEqual({"channel1": {}})
+          return this
+        }),
+        send: mockSend
+      }
     })
 
-    it('returns if already subscribed', () => {
-        const channel = 'channel1'
-        const socket = new Socket({routes: {subscribe: '/subscribe'}}, 'foo');
+    const token = 'foo'; const route = '/subscribe'; const channel = 'channel1'
+    const socket = new Socket({ routes: { subscribe: route } }, token)
+    socket.subscribe(channel)
 
-        Object.defineProperty(socket, 'channels', {
-            value: {"channel1": {}},
-            writable: true
-        });
+    expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(socket.subscribed).toEqual({ channel1: {} })
+  })
 
-        socket.subscribe(channel)
+  it('returns if already subscribed', () => {
+    const channel = 'channel1'
+    const socket = new Socket({ routes: { subscribe: '/subscribe' } }, 'foo')
 
-        expect(request).toHaveBeenCalledTimes(0)
-        expect(socket.subscribed).toEqual({"channel1": {}})
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: {} },
+      writable: true
     })
+
+    socket.subscribe(channel)
+
+    expect(request).toHaveBeenCalledTimes(0)
+    expect(socket.subscribed).toEqual({ channel1: {} })
+  })
 })
