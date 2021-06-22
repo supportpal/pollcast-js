@@ -141,7 +141,7 @@ export class Socket {
    * Disconnect the client from the server.
    */
   disconnect (): void {
-    if (this.request instanceof Request) {
+    if (this.request) {
       this.request.abort()
     }
 

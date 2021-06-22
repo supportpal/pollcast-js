@@ -245,21 +245,58 @@ describe('off', () => {
 })
 
 describe('emit', () => {
-    const request = mocked(Request, true)
+  const request = mocked(Request, true)
 
-    beforeEach(() => request.mockClear())
+  beforeEach(() => request.mockClear())
 
-    it('sends request', () => {
-        const mockSend = jest.fn()
-        request.mockImplementation(() : any => {
-            return {send: mockSend}
-        })
-
-        const token = 'foo'; const route = '/publish';
-        const socket = new Socket({ routes: { publish: route } }, token)
-        socket.emit('channel1', 'typing', {})
-
-        expect(request).toHaveBeenCalledWith('POST', route)
-        expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+  it('sends request', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return { send: mockSend }
     })
+
+    const token = 'foo'; const route = '/publish'
+    const socket = new Socket({ routes: { publish: route } }, token)
+    socket.emit('channel1', 'typing', {})
+
+    expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+  })
+})
+
+describe('disconnect', () => {
+  const request = mocked(Request, true)
+
+  beforeEach(() => request.mockClear())
+
+  it('aborts active request', () => {
+    const abortMock = jest.fn()
+    request.mockImplementation(() : any => {
+      return { abort: abortMock }
+    })
+
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'request', {
+      value: new Request('GET', '/'),
+      writable: true
+    })
+
+    socket.disconnect()
+
+    expect(abortMock).toHaveBeenCalled()
+  })
+
+  it('cancels timer', () => {
+    jest.spyOn(window, 'clearTimeout')
+
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'timer', {
+      value: setTimeout(() => {}),
+      writable: true
+    })
+
+    socket.disconnect()
+
+    expect(clearTimeout).toHaveBeenCalledTimes(1)
+  })
 })
