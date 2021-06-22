@@ -133,3 +133,38 @@ describe('subscribe', () => {
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
 })
+
+describe('Unsubscribe', () => {
+    const request = mocked(Request, true)
+
+    beforeEach(() => request.mockClear())
+
+    it('sends request', () => {
+        const mockSend = jest.fn()
+        request.mockImplementation(() : any => {
+            return {
+                success: jest.fn(function (this: Request, cb) {
+                    cb()
+
+                    return this
+                }),
+                send: mockSend
+            }
+        })
+
+        const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
+
+        let channels : any = {}
+        channels[channel] = {}
+
+        const socket = new Socket({ routes: { unsubscribe: route } }, token)
+        Object.defineProperty(socket, 'channels', {value: channels, writable: true})
+
+        expect(socket.subscribed).toEqual(channels)
+        socket.unsubscribe(channel)
+
+        expect(request).toHaveBeenCalledWith('POST', route)
+        expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+        expect(socket.subscribed).toEqual({})
+    })
+})
