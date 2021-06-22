@@ -135,36 +135,111 @@ describe('subscribe', () => {
 })
 
 describe('Unsubscribe', () => {
-    const request = mocked(Request, true)
+  const request = mocked(Request, true)
 
-    beforeEach(() => request.mockClear())
+  beforeEach(() => request.mockClear())
 
-    it('sends request', () => {
-        const mockSend = jest.fn()
-        request.mockImplementation(() : any => {
-            return {
-                success: jest.fn(function (this: Request, cb) {
-                    cb()
+  it('sends request', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          cb()
 
-                    return this
-                }),
-                send: mockSend
-            }
-        })
-
-        const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
-
-        let channels : any = {}
-        channels[channel] = {}
-
-        const socket = new Socket({ routes: { unsubscribe: route } }, token)
-        Object.defineProperty(socket, 'channels', {value: channels, writable: true})
-
-        expect(socket.subscribed).toEqual(channels)
-        socket.unsubscribe(channel)
-
-        expect(request).toHaveBeenCalledWith('POST', route)
-        expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
-        expect(socket.subscribed).toEqual({})
+          return this
+        }),
+        send: mockSend
+      }
     })
+
+    const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
+
+    const channels : any = {}
+    channels[channel] = {}
+
+    const socket = new Socket({ routes: { unsubscribe: route } }, token)
+    Object.defineProperty(socket, 'channels', { value: channels, writable: true })
+
+    expect(socket.subscribed).toEqual(channels)
+    socket.unsubscribe(channel)
+
+    expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(socket.subscribed).toEqual({})
+  })
+})
+
+describe('on', () => {
+  it('returns when channel doesnt exist', () => {
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', { value: {}, writable: true })
+
+    socket.on('channel1', 'new_message', () => {})
+
+    expect(socket.subscribed).toEqual({})
+  })
+
+  it('registers listener', () => {
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', { value: { channel1: {} }, writable: true })
+
+    socket.on('channel1', 'new_message', () => {})
+
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [expect.any(Function)] } })
+  })
+})
+
+describe('off', () => {
+  it('returns if channel doesnt exist', () => {
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', { value: {}, writable: true })
+
+    socket.off('channel1', 'new_message')
+
+    expect(socket.subscribed).toEqual({})
+  })
+
+  it('returns if event doesnt exist', () => {
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', { value: { channel1: {} }, writable: true })
+
+    socket.off('channel1', 'new_message')
+
+    expect(socket.subscribed).toEqual({ channel1: {} })
+  })
+
+  it('removes all event listeners', () => {
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', {
+      value: {
+        channel1: {
+          new_message: [() => {}, () => {}]
+        }
+      },
+      writable: true
+    })
+
+    socket.off('channel1', 'new_message')
+
+    expect(socket.subscribed).toEqual({ channel1: {} })
+  })
+
+  it('removes specified event listeners', () => {
+    const socket = new Socket({}, 'foo')
+
+    const listener1 = () => {}
+    const listener2 = () => {}
+    Object.defineProperty(socket, 'channels', {
+      value: {
+        channel1: {
+          new_message: [listener1, listener2]
+        }
+      },
+      writable: true
+    })
+
+    socket.off('channel1', 'new_message', listener1)
+
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [listener2] } })
+  })
 })
