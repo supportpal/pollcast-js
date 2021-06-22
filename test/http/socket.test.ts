@@ -2,10 +2,16 @@ import { mocked } from 'ts-jest/utils'
 import { Socket } from '../../src/http/socket'
 import { Request } from '../../src/http/request'
 
+const request = mocked(Request, true)
 jest.mock('../../src/http/request', () => {
   return {
     Request: jest.fn()
   }
+})
+
+beforeEach(() => {
+  jest.resetAllMocks()
+  jest.restoreAllMocks()
 })
 
 describe('constructor', () => {
@@ -15,14 +21,11 @@ describe('constructor', () => {
 })
 
 describe('connect', () => {
-  const request = mocked(Request, true)
-
-  const pollSpy = jest.spyOn(Socket.prototype as any, 'poll')
-  pollSpy.mockImplementation(() => {})
+  let pollSpy : any
 
   beforeEach(() => {
-    request.mockClear()
-    pollSpy.mockClear()
+    pollSpy = jest.spyOn(Socket.prototype as any, 'poll')
+    pollSpy.mockImplementation(() => {})
   })
 
   it('sends request', () => {
@@ -90,11 +93,44 @@ describe('connect', () => {
   })
 })
 
+describe('poll', () => {
+  it('sends request', () => {
+    const mockSend = jest.fn()
+    request
+      // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
+
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+      // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          always: jest.fn().mockReturnThis(),
+          send: mockSend
+        }
+      })
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.connect()
+
+    expect(mockSend).toHaveBeenCalledWith({
+      _token: token,
+      channels: {},
+      time: undefined
+    })
+  })
+})
+
 describe('subscribe', () => {
-  const request = mocked(Request, true)
-
-  beforeEach(() => request.mockClear())
-
   it('sends request', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => {
@@ -135,10 +171,6 @@ describe('subscribe', () => {
 })
 
 describe('Unsubscribe', () => {
-  const request = mocked(Request, true)
-
-  beforeEach(() => request.mockClear())
-
   it('sends request', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => {
@@ -245,10 +277,6 @@ describe('off', () => {
 })
 
 describe('emit', () => {
-  const request = mocked(Request, true)
-
-  beforeEach(() => request.mockClear())
-
   it('sends request', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => {
@@ -265,10 +293,6 @@ describe('emit', () => {
 })
 
 describe('disconnect', () => {
-  const request = mocked(Request, true)
-
-  beforeEach(() => request.mockClear())
-
   it('aborts active request', () => {
     const abortMock = jest.fn()
     request.mockImplementation(() : any => {
