@@ -22,6 +22,13 @@ describe('Request', () => {
     expect(addEventListener).toHaveBeenCalledWith('load', expect.any(Function))
   })
 
+  it('registers always callback', () => {
+    const request = new Request('GET', 'some/url')
+    request.always(() => 1)
+
+    expect(addEventListener).toHaveBeenCalledWith('loadend', expect.any(Function))
+  })
+
   it('sets header', () => {
     const request = new Request('GET', 'some/url')
     request.setRequestHeader('Foo', 'Bar')
@@ -55,6 +62,18 @@ describe('Request', () => {
         }
       })
       .send()
+
+    const [[, load]] = addEventListener.mock.calls
+    load()
+  })
+
+  it('runs always callback', (done) => {
+    const request = new Request('GET', 'some/url')
+    request
+        .always(function () {
+          done()
+        })
+        .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()
