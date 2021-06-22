@@ -56,6 +56,10 @@ export class Socket {
       .send({ _token: this.options.csrfToken })
   }
 
+  get subscribed() {
+    return this.channels
+  }
+
   /**
    * Join a channel.
    */

@@ -86,3 +86,46 @@ describe('connect', () => {
         expect(socket.id).toEqual('')
     })
 })
+
+describe('subscribe', () => {
+    const request = mocked(Request, true)
+
+    beforeEach(() => request.mockClear());
+
+    it('sends request', () => {
+        const mockSend = jest.fn()
+        request.mockImplementation(() : any => {
+            return {
+                success: jest.fn(function (this: Request, cb) {
+                    cb({responseText: '{}'})
+
+                    return this
+                }),
+                send: mockSend
+            }
+        })
+
+        const token = 'foo', route = '/subscribe', channel = 'channel1'
+        const socket = new Socket({routes: {subscribe: route}}, token);
+        socket.subscribe(channel)
+
+        expect(request).toHaveBeenCalledWith('POST', route)
+        expect(mockSend).toHaveBeenCalledWith({_token: token, channel_name: channel})
+        expect(socket.subscribed).toEqual({"channel1": {}})
+    })
+
+    it('returns if already subscribed', () => {
+        const channel = 'channel1'
+        const socket = new Socket({routes: {subscribe: '/subscribe'}}, 'foo');
+
+        Object.defineProperty(socket, 'channels', {
+            value: {"channel1": {}},
+            writable: true
+        });
+
+        socket.subscribe(channel)
+
+        expect(request).toHaveBeenCalledTimes(0)
+        expect(socket.subscribed).toEqual({"channel1": {}})
+    })
+})
