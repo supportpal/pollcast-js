@@ -243,3 +243,23 @@ describe('off', () => {
     expect(socket.subscribed).toEqual({ channel1: { new_message: [listener2] } })
   })
 })
+
+describe('emit', () => {
+    const request = mocked(Request, true)
+
+    beforeEach(() => request.mockClear())
+
+    it('sends request', () => {
+        const mockSend = jest.fn()
+        request.mockImplementation(() : any => {
+            return {send: mockSend}
+        })
+
+        const token = 'foo'; const route = '/publish';
+        const socket = new Socket({ routes: { publish: route } }, token)
+        socket.emit('channel1', 'typing', {})
+
+        expect(request).toHaveBeenCalledWith('POST', route)
+        expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    })
+})
