@@ -133,30 +133,30 @@ describe('poll', () => {
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
     request
-        // connect implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '{"status": "success"}' }
-              cb(xhr)
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
-        // poll implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn().mockReturnThis(),
-            always: jest.fn(function (this: Request, cb) {
-              cb()
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          always: jest.fn(function (this: Request, cb) {
+            cb()
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
 
     const token = 'foo'; const route = '/connect'
     const socket = new Socket({ routes: { connect: route } }, token)
