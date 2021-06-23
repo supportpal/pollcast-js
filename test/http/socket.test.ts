@@ -125,7 +125,7 @@ describe('poll', () => {
     expect(mockSend).toHaveBeenCalledWith({
       _token: token,
       channels: {},
-      time: undefined
+      time: ''
     })
   })
 

@@ -1,4 +1,6 @@
 import { Request } from './request'
+import { UniversalTime } from '../util/universal-time'
+import { WindowVisibility } from '../util/window-visibility'
 
 export class Socket {
   /**
@@ -12,9 +14,14 @@ export class Socket {
   private options: any
 
   /**
+   * Track window visibility.
+   */
+  private window: WindowVisibility = new WindowVisibility()
+
+  /**
    * Poll for data which has been created since this timestamp.
    */
-  private date: string | undefined
+  private universalTime: UniversalTime = new UniversalTime()
 
   /**
    * Function used to short poll every so many milliseconds.
@@ -49,7 +56,7 @@ export class Socket {
           return
         }
 
-        self.date = response.time
+        self.universalTime.setTime(response.time)
         self.id = response.id
         self.poll()
       })
@@ -153,6 +160,10 @@ export class Socket {
 
   private poll (): void {
     const self = this
+    if (!this.window.isActive()) {
+      setTimeout(() => self.poll(), this.options.polling)
+      return
+    }
 
     const channels : any = {}
     for (const channel in this.channels) {
@@ -166,7 +177,7 @@ export class Socket {
         self.timer = setTimeout(() => self.poll(), self.options.polling)
       })
       .send({
-        time: this.date,
+        time: this.universalTime.getTime(),
         channels: channels,
         _token: this.options.csrfToken
       })
@@ -178,7 +189,7 @@ export class Socket {
       return
     }
 
-    this.date = response.time
+    this.universalTime.setTime(response.time)
 
     for (const event in response.events) {
       if (!Object.hasOwnProperty.call(response.events, event)) {
