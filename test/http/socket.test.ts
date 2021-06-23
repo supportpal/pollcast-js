@@ -164,6 +164,79 @@ describe('poll', () => {
 
     expect(timeoutSpy).toBeCalledTimes(1)
   })
+
+  it('fires events', (done) => {
+    request
+        // connect implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success"}' }
+              cb(xhr)
+
+              return this
+            }),
+            send: jest.fn()
+          }
+        })
+        // poll implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}'}
+              cb(xhr)
+
+              return this
+            }),
+            always: jest.fn().mockReturnThis(),
+            send: jest.fn()
+          }
+        })
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+
+    const cb = () => {done()}
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: {"new_message": [cb]} },
+      writable: true
+    })
+
+    socket.connect()
+  })
+
+  it('skips unknown events', () => {
+    request
+        // connect implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success"}' }
+              cb(xhr)
+
+              return this
+            }),
+            send: jest.fn()
+          }
+        })
+        // poll implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}'}
+              cb(xhr)
+
+              return this
+            }),
+            always: jest.fn().mockReturnThis(),
+            send: jest.fn()
+          }
+        })
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.connect()
+  })
 })
 
 describe('subscribe', () => {
