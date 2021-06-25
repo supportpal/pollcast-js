@@ -76,9 +76,7 @@ export class Channel extends BaseChannel {
    * Register a callback to be called anytime a subscription succeeds.
    */
   subscribed (callback: Function): Channel {
-    this.socket.on(this.name, 'pollcast:subscription_succeeded', () => {
-      callback()
-    })
+    this.socket.on(this.name, 'pollcast:subscription_succeeded', callback)
 
     return this
   }
