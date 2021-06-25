@@ -154,6 +154,19 @@ export class Socket {
     }
   }
 
+  dispatch(channel: string, event: string, data: any) {
+    if (!Object.hasOwnProperty.call(this.channels, channel) ||
+        !Object.hasOwnProperty.call(this.channels[channel], event)
+    ) {
+      return
+    }
+
+    const events = this.channels[channel][event]
+    for (let i = 0; i < events.length; i++) {
+      events[i](data)
+    }
+  }
+
   private poll (): void {
     const self = this
 
@@ -188,24 +201,9 @@ export class Socket {
 
     this.universalTime.setTime(response.time)
 
-    for (const event in response.events) {
-      if (!Object.hasOwnProperty.call(response.events, event)) {
-        continue
-      }
-
+    Object.keys(response.events).forEach((event) => {
       const item = response.events[event]
-      const channel = item.channel.name
-
-      if (!Object.hasOwnProperty.call(this.channels, channel) ||
-            !Object.hasOwnProperty.call(this.channels[channel], item.event)
-      ) {
-        continue
-      }
-
-      const events = this.channels[channel][item.event]
-      for (let i = 0; i < events.length; i++) {
-        events[i](item.payload)
-      }
-    }
+      this.dispatch(item.channel.name, item.event, item.payload)
+    })
   }
 }
