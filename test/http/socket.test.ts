@@ -244,6 +244,50 @@ describe('poll', () => {
     const socket = new Socket({ routes: { connect: route } }, token)
     socket.connect()
   })
+
+  it('skips unexpected responses', () => {
+    const mockSend = jest.fn()
+    request
+        // connect implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success"}' }
+              cb(xhr)
+
+              return this
+            }),
+            send: jest.fn()
+          }
+        })
+        // poll implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '"foo"' }
+              cb(xhr)
+
+              return this
+            }),
+            always: jest.fn().mockReturnThis(),
+            send: mockSend
+          }
+        })
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+    socket.dispatch = jest.fn()
+
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [()=>{}] } },
+      writable: true
+    })
+
+    socket.connect()
+
+    expect(mockSend).toBeCalledTimes(1)
+    expect(socket.dispatch).toBeCalledTimes(0)
+  })
 })
 
 describe('subscribe', () => {
