@@ -44,13 +44,6 @@ export class Connector extends BaseConnector {
   }
 
   /**
-   * Listen for an event on a channel instance.
-   */
-  listen (name: string, event: string, callback: Function): Channel {
-    return this.channel(name).listen(event, callback)
-  }
-
-  /**
    * Get a channel instance by name.
    */
   channel (name: string): Channel {
