@@ -113,7 +113,7 @@ export class Connector extends BaseConnector {
    * Disconnect connection.
    */
   disconnect (): void {
-    if (this.socket instanceof Socket) {
+    if (this.socket) {
       this.socket.disconnect()
     }
   }

@@ -1,0 +1,175 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`connector can join new channel 1`] = `
+Object {
+  "foo": Channel {
+    "eventFormatter": EventFormatter {
+      "namespace": "App.Events",
+    },
+    "name": "foo",
+    "options": Object {
+      "auth": Object {
+        "headers": Object {},
+      },
+      "authEndpoint": "/broadcasting/auth",
+      "broadcaster": "pusher",
+      "csrfToken": null,
+      "host": null,
+      "key": null,
+      "namespace": "App.Events",
+      "polling": 5000,
+      "routes": Object {
+        "connect": "",
+        "publish": "",
+        "receive": "",
+        "subscribe": "",
+        "unsubscribe": "",
+      },
+    },
+    "socket": Object {
+      "connect": [MockFunction] {
+        "calls": Array [
+          Array [],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "disconnect": [MockFunction],
+      "subscribe": [MockFunction] {
+        "calls": Array [
+          Array [
+            "foo",
+          ],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "unsubscribe": [MockFunction],
+    },
+  },
+}
+`;
+
+exports[`connector can join presence channel 1`] = `
+Object {
+  "presence-foo": PresenceChannel {
+    "eventFormatter": EventFormatter {
+      "namespace": "App.Events",
+    },
+    "name": "presence-foo",
+    "options": Object {
+      "auth": Object {
+        "headers": Object {},
+      },
+      "authEndpoint": "/broadcasting/auth",
+      "broadcaster": "pusher",
+      "csrfToken": null,
+      "host": null,
+      "key": null,
+      "namespace": "App.Events",
+      "polling": 5000,
+      "routes": Object {
+        "connect": "",
+        "publish": "",
+        "receive": "",
+        "subscribe": "",
+        "unsubscribe": "",
+      },
+    },
+    "socket": Object {
+      "connect": [MockFunction] {
+        "calls": Array [
+          Array [],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "disconnect": [MockFunction],
+      "subscribe": [MockFunction] {
+        "calls": Array [
+          Array [
+            "presence-foo",
+          ],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "unsubscribe": [MockFunction],
+    },
+  },
+}
+`;
+
+exports[`connector can join private channel 1`] = `
+Object {
+  "private-foo": PrivateChannel {
+    "eventFormatter": EventFormatter {
+      "namespace": "App.Events",
+    },
+    "name": "private-foo",
+    "options": Object {
+      "auth": Object {
+        "headers": Object {},
+      },
+      "authEndpoint": "/broadcasting/auth",
+      "broadcaster": "pusher",
+      "csrfToken": null,
+      "host": null,
+      "key": null,
+      "namespace": "App.Events",
+      "polling": 5000,
+      "routes": Object {
+        "connect": "",
+        "publish": "",
+        "receive": "",
+        "subscribe": "",
+        "unsubscribe": "",
+      },
+    },
+    "socket": Object {
+      "connect": [MockFunction] {
+        "calls": Array [
+          Array [],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "disconnect": [MockFunction],
+      "subscribe": [MockFunction] {
+        "calls": Array [
+          Array [
+            "private-foo",
+          ],
+        ],
+        "results": Array [
+          Object {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "unsubscribe": [MockFunction],
+    },
+  },
+}
+`;
