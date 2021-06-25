@@ -16,15 +16,12 @@ const urlEncode = function (key: string, value: string): string {
  * URL encode an object.
  */
 const urlEncodeObject = function (obj: any, prefix?: string): string {
-  const str = []
-  for (const p in obj) {
-    if (!Object.prototype.hasOwnProperty.call(obj, p)) {
-      continue
-    }
+  const str : string[] = []
 
+  Object.keys(obj).forEach((key, index) => {
     let item
-    const k = prefix ? prefix + '[' + p + ']' : p
-    const v = obj[p]
+    const k = prefix ? prefix + '[' + key + ']' : key
+    const v = obj[key]
     if (typeof v === 'object') {
       item = isEmptyObject(v) ? urlEncode(k, '') : urlEncodeObject(v, k)
     } else {
@@ -32,7 +29,7 @@ const urlEncodeObject = function (obj: any, prefix?: string): string {
     }
 
     str.push(item)
-  }
+  })
 
   return str.join('&')
 }
