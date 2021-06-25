@@ -176,6 +176,7 @@ export class Socket {
     }
 
     if (!WindowVisibility.isActive() || isEmptyObject(channels)) {
+      /* istanbul ignore next */
       self.timer = setTimeout(() => self.poll(), this.options.polling)
       return
     }
@@ -184,6 +185,7 @@ export class Socket {
     this.request
       .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
       .always(() => {
+        /* istanbul ignore next */
         self.timer = setTimeout(() => self.poll(), self.options.polling)
       })
       .send({

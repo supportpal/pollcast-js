@@ -1,6 +1,7 @@
 import { mocked } from 'ts-jest/utils'
 import { Socket } from '../../src/http/socket'
 import { Request } from '../../src/http/request'
+import WindowVisibility from "../../src/util/window-visibility";
 
 const request = mocked(Request, true)
 jest.mock('../../src/http/request', () => {
@@ -127,6 +128,7 @@ describe('poll', () => {
   })
 
   it('always loops', () => {
+    const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
     request
@@ -151,14 +153,22 @@ describe('poll', () => {
 
             return this
           }),
-          send: jest.fn()
+          send: mockSend
         }
       })
 
     const token = 'foo'; const route = '/connect'
     const socket = new Socket({ routes: { connect: route } }, token)
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [()=> {}] } },
+      writable: true
+    })
+
     socket.connect()
 
+    expect(mockSend).toBeCalledTimes(1)
     expect(timeoutSpy).toBeCalledTimes(1)
   })
 
