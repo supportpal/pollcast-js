@@ -317,13 +317,23 @@ describe('on', () => {
     expect(socket.subscribed).toEqual({})
   })
 
-  it('registers listener', () => {
+  it('registers first listener', () => {
     const socket = new Socket({}, 'foo')
     Object.defineProperty(socket, 'channels', { value: { channel1: {} }, writable: true })
 
     socket.on('channel1', 'new_message', () => {})
 
     expect(socket.subscribed).toEqual({ channel1: { new_message: [expect.any(Function)] } })
+  })
+
+  it('appends to existing listeners', () => {
+    const cb = () => {}
+    const socket = new Socket({}, 'foo')
+    Object.defineProperty(socket, 'channels', { value: { channel1: {new_message: [cb]} }, writable: true })
+
+    socket.on('channel1', 'new_message', () => {})
+
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb, expect.any(Function)] } })
   })
 })
 
