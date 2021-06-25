@@ -12,4 +12,20 @@ describe('local storage', () => {
 
     expect(localStorage.get().bar).toEqual('bar')
   })
+
+  it('returns empty object on json parse error', () => {
+    const key = 'foo'
+    localStorage.setItem(key, '{foo,}')
+
+    const storage = new LocalStorage(key)
+    expect(storage.get()).toEqual({})
+  })
+
+  it('returns empty object on unexpected serialized json value', () => {
+    const key = 'foo'
+    localStorage.setItem(key, '"foo"')
+
+    const storage = new LocalStorage(key)
+    expect(storage.get()).toEqual({})
+  })
 })
