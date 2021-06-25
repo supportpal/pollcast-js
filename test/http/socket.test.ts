@@ -408,6 +408,47 @@ describe('emit', () => {
   })
 })
 
+describe('dispatch', () => {
+  it('returns when channel doesnt exist', () => {
+    const cb = jest.fn()
+    const socket = new Socket({}, '')
+    Object.defineProperty(socket, 'channels', {
+      value: {'foo': {'bar': [cb]}},
+      writable: true
+    })
+
+    socket.dispatch('doesnt_exist', 'bar', {})
+
+    expect(cb).toBeCalledTimes(0)
+  })
+
+  it('returns when event doesnt exist', () => {
+      const cb = jest.fn()
+      const socket = new Socket({}, '')
+      Object.defineProperty(socket, 'channels', {
+          value: {'foo': {'bar': [cb]}},
+          writable: true
+      })
+
+      socket.dispatch('foo', 'doesnt_exist', {})
+
+      expect(cb).toBeCalledTimes(0)
+  })
+
+  it('dispatches event', () => {
+    const cb = jest.fn()
+    const socket = new Socket({}, '')
+    Object.defineProperty(socket, 'channels', {
+      value: {'foo': {'bar': [cb]}},
+      writable: true
+    })
+
+    socket.dispatch('foo', 'bar', {})
+
+    expect(cb).toBeCalledTimes(1)
+  })
+})
+
 describe('disconnect', () => {
   it('aborts active request', () => {
     const abortMock = jest.fn()
