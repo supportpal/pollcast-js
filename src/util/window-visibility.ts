@@ -1,26 +1,28 @@
 import { uuid } from './helpers'
 import { LocalStorage } from './local-storage'
 
-export class WindowVisibility {
-  private windowId = uuid()
-  private storage : LocalStorage = new LocalStorage('window-visibility')
+/**
+ * This class is static as we want it to act as a singleton.
+ * No matter how many PollcastConnector instances you create the windowId should remain the same.
+ */
+class WindowVisibility {
+  private static windowId = uuid()
+  private static storage : LocalStorage = new LocalStorage('window-visibility')
 
-  constructor () {
-    this.setActive()
-
-    const self = this
-    window.addEventListener('visibilitychange', function () {
-      if (!document.hidden) {
-        self.setActive()
-      }
-    })
-  }
-
-  setActive () {
+  static setActive () {
     this.storage.set('lastActive', this.windowId)
   };
 
-  isActive () {
+  static isActive () {
     return this.storage.get().lastActive === this.windowId
   };
 }
+
+WindowVisibility.setActive()
+window.addEventListener('visibilitychange', function () {
+  if (!document.hidden) {
+    WindowVisibility.setActive()
+  }
+})
+
+export default WindowVisibility

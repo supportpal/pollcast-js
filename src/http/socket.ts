@@ -1,6 +1,6 @@
 import { Request } from './request'
 import { UniversalTime } from '../util/universal-time'
-import { WindowVisibility } from '../util/window-visibility'
+import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
 
 export class Socket {
@@ -13,11 +13,6 @@ export class Socket {
    * Socket options.
    */
   private options: any
-
-  /**
-   * Track window visibility.
-   */
-  private window: WindowVisibility = new WindowVisibility()
 
   /**
    * Poll for data which has been created since this timestamp.
@@ -167,7 +162,7 @@ export class Socket {
       channels[channel] = Object.keys(this.channels[channel])
     }
 
-    if (!this.window.isActive() || isEmptyObject(channels)) {
+    if (!WindowVisibility.isActive() || isEmptyObject(channels)) {
       self.timer = setTimeout(() => self.poll(), this.options.polling)
       return
     }
