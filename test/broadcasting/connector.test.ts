@@ -115,9 +115,15 @@ describe('connector', () => {
         expect(mockUnsubscribe).toBeCalledTimes(0)
     })
 
-    it('returns undefined socket id', () => {
+    it('returns socket id', () => {
         const connector = new Connector({})
         expect(connector.socketId()).toEqual(undefined)
+    })
+
+    it('returns empty socket id when socket is not defined', () => {
+        const connector = new Connector({})
+        connector.socket = undefined
+        expect(connector.socketId()).toEqual('')
     })
 
     it('can disconnect', () => {
