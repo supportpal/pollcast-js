@@ -11,16 +11,29 @@ describe('window visibility', () => {
     expect(WindowVisibility.isActive()).toBeTruthy()
   })
 
-  it('updates state on visibility change', () => {
+  it('updates state on document visible event', () => {
     const localStorage = new LocalStorage('window-visibility')
     localStorage.set('lastActive', 'foo')
 
     expect(WindowVisibility.isActive()).toBeFalsy()
 
     // Change visibility
-    Object.defineProperty(document, 'hidden', { value: false })
+    Object.defineProperty(document, 'hidden', { writable: true, value: false })
     document.dispatchEvent(new Event('visibilitychange', { bubbles: true }))
 
     expect(WindowVisibility.isActive()).toBeTruthy()
+  })
+
+  it('updates state on document hidden event', () => {
+    const localStorage = new LocalStorage('window-visibility')
+    localStorage.set('lastActive', 'foo')
+
+    expect(WindowVisibility.isActive()).toBeFalsy()
+
+    // Change visibility
+    Object.defineProperty(document, 'hidden', { writable: true, value: true })
+    document.dispatchEvent(new Event('visibilitychange', { bubbles: true }))
+
+    expect(WindowVisibility.isActive()).toBeFalsy()
   })
 })
