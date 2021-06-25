@@ -26,7 +26,7 @@ const urlEncodeObject = function (obj: any, prefix?: string): string {
     const k = prefix ? prefix + '[' + p + ']' : p
     const v = obj[p]
     if (typeof v === 'object') {
-      item = isEmptyObject(v) ? urlEncode(k, '') : urlEncodeObject(v, k);
+      item = isEmptyObject(v) ? urlEncode(k, '') : urlEncodeObject(v, k)
     } else {
       item = urlEncode(k, v)
     }
@@ -52,6 +52,7 @@ const uuid = function () {
 }
 
 export {
+  isEmptyObject,
   urlEncodeObject,
   uuid
 }

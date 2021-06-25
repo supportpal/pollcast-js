@@ -1,6 +1,7 @@
 import { Request } from './request'
 import { UniversalTime } from '../util/universal-time'
 import { WindowVisibility } from '../util/window-visibility'
+import { isEmptyObject } from '../util/helpers'
 
 export class Socket {
   /**
@@ -160,14 +161,15 @@ export class Socket {
 
   private poll (): void {
     const self = this
-    if (!this.window.isActive()) {
-      setTimeout(() => self.poll(), this.options.polling)
-      return
-    }
 
     const channels : any = {}
     for (const channel in this.channels) {
       channels[channel] = Object.keys(this.channels[channel])
+    }
+
+    if (!this.window.isActive() || isEmptyObject(channels)) {
+      setTimeout(() => self.poll(), this.options.polling)
+      return
     }
 
     this.request = new Request('POST', this.options.routes.receive)

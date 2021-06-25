@@ -94,8 +94,9 @@ describe('connect', () => {
 })
 
 describe('poll', () => {
-  it('sends request', () => {
-    const mockSend = jest.fn()
+  it('skips if no channels', () => {
+    const timeoutSpy = jest.spyOn(window, 'setTimeout')
+
     request
       // connect implementation
       .mockImplementationOnce(() : any => {
@@ -114,7 +115,7 @@ describe('poll', () => {
         return {
           success: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
-          send: mockSend
+          send: jest.fn()
         }
       })
 
@@ -122,11 +123,7 @@ describe('poll', () => {
     const socket = new Socket({ routes: { connect: route } }, token)
     socket.connect()
 
-    expect(mockSend).toHaveBeenCalledWith({
-      _token: token,
-      channels: {},
-      time: ''
-    })
+    expect(timeoutSpy).toBeCalledTimes(1)
   })
 
   it('always loops', () => {
@@ -145,7 +142,7 @@ describe('poll', () => {
           send: jest.fn()
         }
       })
-    // poll implementation
+      // poll implementation
       .mockImplementationOnce(() : any => {
         return {
           success: jest.fn().mockReturnThis(),
@@ -179,7 +176,7 @@ describe('poll', () => {
           send: jest.fn()
         }
       })
-    // poll implementation
+      // poll implementation
       .mockImplementationOnce(() : any => {
         return {
           success: jest.fn(function (this: Request, cb) {
