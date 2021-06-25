@@ -1,9 +1,57 @@
-import { open, send, setRequestHeader, addEventListener, abort } from './__mocks__/xhr-mock'
 import { Request } from '../../src/http/request'
 
-describe('Request', () => {
-  afterEach(() => jest.clearAllMocks())
+let open :any,
+    setRequestHeader : any,
+    send : any,
+    addEventListener : any,
+    abort : any,
+    xhr : any
 
+beforeEach(() => {
+  jest.resetAllMocks()
+  jest.restoreAllMocks()
+
+  open = jest.fn()
+  setRequestHeader = jest.fn()
+  send = jest.fn()
+  addEventListener = jest.fn()
+  abort = jest.fn()
+  xhr = {
+    open: open,
+    send: send,
+    setRequestHeader: setRequestHeader,
+    addEventListener: addEventListener,
+    abort: abort,
+    readyState: 4,
+    status: 200
+  }
+
+  Object.defineProperty(window, 'XMLHttpRequest', {
+    writable: true,
+    value: jest.fn().mockImplementation(() => (xhr))
+  })
+})
+
+describe('failed requests', () => {
+  beforeEach(() => {
+    xhr.status = 500
+  })
+
+  it('does not run success callback', () => {
+    const cb = jest.fn();
+    const request = new Request('GET', 'some/url')
+    request
+        .success(cb)
+        .send()
+
+    const [[, load]] = addEventListener.mock.calls
+    load()
+
+    expect(cb).toBeCalledTimes(0)
+  })
+})
+
+describe('successful requests', () => {
   it('opens xhr and sets headers', () => {
     /* eslint-disable no-new */
     new Request('GET', 'some/url')
@@ -50,21 +98,18 @@ describe('Request', () => {
     expect(send).toHaveBeenCalledWith('foo=bar')
   })
 
-  it('runs success callback', (done) => {
+  it('runs success callback', () => {
+    const cb = jest.fn()
     const request = new Request('GET', 'some/url')
     request
-      .success(function (xhr : any) {
-        try {
-          expect(xhr.status).toEqual(200)
-          done()
-        } catch (e) {
-          done(e)
-        }
-      })
+      .success(cb)
       .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()
+
+    expect(cb).toBeCalledTimes(1)
+    expect(cb).toHaveBeenCalledWith(xhr)
   })
 
   it('runs always callback', (done) => {
