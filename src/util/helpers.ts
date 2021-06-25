@@ -1,17 +1,37 @@
-const urlEncode = function (obj: any, prefix?: string): string {
+/**
+ * @see https://stackoverflow.com/a/32108184
+ */
+const isEmptyObject = function (obj : any) : boolean {
+  return obj && Object.keys(obj).length === 0 && obj.constructor === Object
+}
+
+/**
+ * URL encode a key value pair.
+ */
+const urlEncode = function (key: string, value: string): string {
+  return encodeURIComponent(key) + '=' + encodeURIComponent(value)
+}
+
+/**
+ * URL encode an object.
+ */
+const urlEncodeObject = function (obj: any, prefix?: string): string {
   const str = []
   for (const p in obj) {
     if (!Object.prototype.hasOwnProperty.call(obj, p)) {
       continue
     }
 
+    let item
     const k = prefix ? prefix + '[' + p + ']' : p
     const v = obj[p]
     if (typeof v === 'object') {
-      str.push(urlEncode(v, k))
+      item = isEmptyObject(v) ? urlEncode(k, '') : urlEncodeObject(v, k);
     } else {
-      str.push(encodeURIComponent(k) + '=' + encodeURIComponent(v))
+      item = urlEncode(k, v)
     }
+
+    str.push(item)
   }
 
   return str.join('&')
@@ -32,6 +52,6 @@ const uuid = function () {
 }
 
 export {
-  urlEncode,
+  urlEncodeObject,
   uuid
 }

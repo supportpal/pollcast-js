@@ -1,4 +1,4 @@
-import { urlEncode } from '../util/helpers'
+import { urlEncodeObject } from '../util/helpers'
 
 export class Request {
   private xhr: XMLHttpRequest
@@ -40,7 +40,7 @@ export class Request {
   send (data?: object): void {
     let encodedData
     if (typeof data !== 'undefined') {
-      encodedData = urlEncode(data)
+      encodedData = urlEncodeObject(data)
     }
 
     this.xhr.send(encodedData || null)
