@@ -154,7 +154,7 @@ export class Socket {
     }
   }
 
-  dispatch(channel: string, event: string, data: any) {
+  dispatch (channel: string, event: string, data: any) {
     if (!Object.hasOwnProperty.call(this.channels, channel) ||
         !Object.hasOwnProperty.call(this.channels[channel], event)
     ) {

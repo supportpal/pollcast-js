@@ -1,11 +1,11 @@
 import { Request } from '../../src/http/request'
 
 let open :any,
-    setRequestHeader : any,
-    send : any,
-    addEventListener : any,
-    abort : any,
-    xhr : any
+  setRequestHeader : any,
+  send : any,
+  addEventListener : any,
+  abort : any,
+  xhr : any
 
 beforeEach(() => {
   jest.resetAllMocks()
@@ -38,11 +38,11 @@ describe('failed requests', () => {
   })
 
   it('does not run success callback', () => {
-    const cb = jest.fn();
+    const cb = jest.fn()
     const request = new Request('GET', 'some/url')
     request
-        .success(cb)
-        .send()
+      .success(cb)
+      .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()

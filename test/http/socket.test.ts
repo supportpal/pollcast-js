@@ -1,7 +1,7 @@
 import { mocked } from 'ts-jest/utils'
 import { Socket } from '../../src/http/socket'
 import { Request } from '../../src/http/request'
-import WindowVisibility from "../../src/util/window-visibility";
+import WindowVisibility from '../../src/util/window-visibility'
 
 const request = mocked(Request, true)
 jest.mock('../../src/http/request', () => {
@@ -162,7 +162,7 @@ describe('poll', () => {
 
     WindowVisibility.setActive()
     Object.defineProperty(socket, 'channels', {
-      value: { channel1: { new_message: [()=> {}] } },
+      value: { channel1: { new_message: [() => {}] } },
       writable: true
     })
 
@@ -248,38 +248,38 @@ describe('poll', () => {
   it('skips unexpected responses', () => {
     const mockSend = jest.fn()
     request
-        // connect implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '{"status": "success"}' }
-              cb(xhr)
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
-        // poll implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '"foo"' }
-              cb(xhr)
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '"foo"' }
+            cb(xhr)
 
-              return this
-            }),
-            always: jest.fn().mockReturnThis(),
-            send: mockSend
-          }
-        })
+            return this
+          }),
+          always: jest.fn().mockReturnThis(),
+          send: mockSend
+        }
+      })
 
     const token = 'foo'; const route = '/connect'
     const socket = new Socket({ routes: { connect: route } }, token)
     socket.dispatch = jest.fn()
 
     Object.defineProperty(socket, 'channels', {
-      value: { channel1: { new_message: [()=>{}] } },
+      value: { channel1: { new_message: [() => {}] } },
       writable: true
     })
 
@@ -383,7 +383,7 @@ describe('on', () => {
   it('appends to existing listeners', () => {
     const cb = () => {}
     const socket = new Socket({}, 'foo')
-    Object.defineProperty(socket, 'channels', { value: { channel1: {new_message: [cb]} }, writable: true })
+    Object.defineProperty(socket, 'channels', { value: { channel1: { new_message: [cb] } }, writable: true })
 
     socket.on('channel1', 'new_message', () => {})
 
@@ -467,7 +467,7 @@ describe('dispatch', () => {
     const cb = jest.fn()
     const socket = new Socket({}, '')
     Object.defineProperty(socket, 'channels', {
-      value: {'foo': {'bar': [cb]}},
+      value: { foo: { bar: [cb] } },
       writable: true
     })
 
@@ -477,23 +477,23 @@ describe('dispatch', () => {
   })
 
   it('returns when event doesnt exist', () => {
-      const cb = jest.fn()
-      const socket = new Socket({}, '')
-      Object.defineProperty(socket, 'channels', {
-          value: {'foo': {'bar': [cb]}},
-          writable: true
-      })
+    const cb = jest.fn()
+    const socket = new Socket({}, '')
+    Object.defineProperty(socket, 'channels', {
+      value: { foo: { bar: [cb] } },
+      writable: true
+    })
 
-      socket.dispatch('foo', 'doesnt_exist', {})
+    socket.dispatch('foo', 'doesnt_exist', {})
 
-      expect(cb).toBeCalledTimes(0)
+    expect(cb).toBeCalledTimes(0)
   })
 
   it('dispatches event', () => {
     const cb = jest.fn()
     const socket = new Socket({}, '')
     Object.defineProperty(socket, 'channels', {
-      value: {'foo': {'bar': [cb]}},
+      value: { foo: { bar: [cb] } },
       writable: true
     })
 
