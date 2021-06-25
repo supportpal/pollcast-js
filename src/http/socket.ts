@@ -168,7 +168,7 @@ export class Socket {
     }
 
     if (!this.window.isActive() || isEmptyObject(channels)) {
-      setTimeout(() => self.poll(), this.options.polling)
+      self.timer = setTimeout(() => self.poll(), this.options.polling)
       return
     }
 
