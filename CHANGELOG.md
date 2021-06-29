@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/supportpal/pollcast-js//compare/v1.0.0...v1.0.1) (2021-06-29)
+
+
+### Bug Fixes
+
+* unable to publish to npm ([d5fabb6](https://github.com/supportpal/pollcast-js//commit/d5fabb66c8782a9243a6ade7edb8a0a593ef0630))
+
 # 1.0.0 (2021-06-29)
 
 
