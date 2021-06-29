@@ -59,5 +59,8 @@
         "maxSize": "10kB"
       }
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
