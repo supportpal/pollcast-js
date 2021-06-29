@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/supportpal/pollcast-js//compare/v1.0.1...v1.0.2) (2021-06-29)
+
+
+### Bug Fixes
+
+* update npm ignore list ([557ac49](https://github.com/supportpal/pollcast-js//commit/557ac49a987df35e44780f8eb6b0d8f066ffd31a))
+
 ## [1.0.1](https://github.com/supportpal/pollcast-js//compare/v1.0.0...v1.0.1) (2021-06-29)
 
 
