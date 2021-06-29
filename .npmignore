@@ -1,7 +1,12 @@
-/.github/
-/src/
-/test/
 /.babelrc
+/.eslintrc.js
+/.github/
 /.releaserc
+/babel.config.js
+/coverage/
 /gulpfile.js
 /jest.config.js
+/release.config.js
+/src/
+/test/
+/tsconfig.json
