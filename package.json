@@ -1,6 +1,6 @@
 {
   "name": "@supportpal/pollcast",
-  "version": "0.0.0-semantic-release",
+  "version": "1.0.0",
   "description": "",
   "repository": {
     "url": "https://github.com/supportpal/pollcast-js/"
