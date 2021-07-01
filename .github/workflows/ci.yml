@@ -31,7 +31,7 @@ jobs:
       - name: Check bundle size
         run: npm run bundlewatch
         env:
-          BUNDLEWATCH_GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          BUNDLEWATCH_GITHUB_TOKEN: ${{ secrets.BUNDLEWATCH_GITHUB_TOKEN }}
 
       - name: Run semantic-release
         uses: cycjimmy/semantic-release-action@v2
