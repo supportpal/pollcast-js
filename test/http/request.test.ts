@@ -49,6 +49,20 @@ describe('failed requests', () => {
 
     expect(cb).toBeCalledTimes(0)
   })
+
+  it('runs fail callback', () => {
+    const cb = jest.fn()
+    const request = new Request('GET', 'some/url')
+    request
+        .fail(cb)
+        .send()
+
+    const [[, load]] = addEventListener.mock.calls
+    load()
+
+    expect(cb).toBeCalledTimes(1)
+    expect(cb).toHaveBeenCalledWith(xhr)
+  })
 })
 
 describe('successful requests', () => {
@@ -129,5 +143,18 @@ describe('successful requests', () => {
     request.abort()
 
     expect(abort).toHaveBeenCalled()
+  })
+
+  it('fail callback does not run on status 200', () => {
+    const cb = jest.fn()
+    const request = new Request('GET', 'some/url')
+    request
+        .fail(cb)
+        .send()
+
+    const [[, load]] = addEventListener.mock.calls
+    load()
+
+    expect(cb).toBeCalledTimes(0)
   })
 })
