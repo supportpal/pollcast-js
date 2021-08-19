@@ -148,6 +148,7 @@ describe('poll', () => {
       .mockImplementationOnce(() : any => {
         return {
           success: jest.fn().mockReturnThis(),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn(function (this: Request, cb) {
             cb()
 
@@ -195,6 +196,7 @@ describe('poll', () => {
 
             return this
           }),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
@@ -269,6 +271,7 @@ describe('poll', () => {
 
             return this
           }),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
           send: mockSend
         }
@@ -314,19 +317,33 @@ describe('subscribe', () => {
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
 
-  it('returns if already subscribed', () => {
+  it('does not clear events if already subscribed', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{}' }
+          cb(xhr)
+
+          return this
+        }),
+        send: mockSend
+      }
+    })
+
     const channel = 'channel1'
     const socket = new Socket({ routes: { subscribe: '/subscribe' } }, 'foo')
 
+    const cb = () => {}
     Object.defineProperty(socket, 'channels', {
-      value: { channel1: {} },
+      value: { channel1: { new_message: [cb] } },
       writable: true
     })
 
     socket.subscribe(channel)
 
-    expect(request).toHaveBeenCalledTimes(0)
-    expect(socket.subscribed).toEqual({ channel1: {} })
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 })
 
