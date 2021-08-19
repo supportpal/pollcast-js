@@ -177,6 +177,46 @@ describe('poll', () => {
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 
+  it('poll fail callback does nothing if not http status code 404', () => {
+    request
+        // connect implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn(function (this: Request, cb) {
+              const xhr = { responseText: '{"status": "success"}' }
+              cb(xhr)
+
+              return this
+            }),
+            send: jest.fn()
+          }
+        })
+        // poll implementation
+        .mockImplementationOnce(() : any => {
+          return {
+            success: jest.fn().mockReturnThis(),
+            fail: jest.fn(function (this: Request, cb) {
+              const xhr = { status: 400 }
+              cb(xhr)
+
+              return this
+            }),
+            always: jest.fn().mockReturnThis(),
+            send: jest.fn()
+          }
+        })
+
+    const socket = new Socket({ routes: { connect: '/connect' } }, 'foo')
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [() => {}] } },
+      writable: true
+    })
+
+    socket.connect()
+  })
+
   it('always loops', () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
