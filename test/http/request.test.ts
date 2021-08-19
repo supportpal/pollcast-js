@@ -54,8 +54,8 @@ describe('failed requests', () => {
     const cb = jest.fn()
     const request = new Request('GET', 'some/url')
     request
-        .fail(cb)
-        .send()
+      .fail(cb)
+      .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()
@@ -149,8 +149,8 @@ describe('successful requests', () => {
     const cb = jest.fn()
     const request = new Request('GET', 'some/url')
     request
-        .fail(cb)
-        .send()
+      .fail(cb)
+      .send()
 
     const [[, load]] = addEventListener.mock.calls
     load()

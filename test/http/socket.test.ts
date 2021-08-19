@@ -130,36 +130,36 @@ describe('poll', () => {
   it('resubscribes on 404', () => {
     const mockSend = jest.fn()
     request
-        // connect implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '{"status": "success"}' }
-              cb(xhr)
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
-        // poll implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn().mockReturnThis(),
-            fail: jest.fn(function (this: Request, cb) {
-              const xhr = { status: 404, responseText: '{"message": "Not Found"}' }
-              cb(xhr)
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn(function (this: Request, cb) {
+            const xhr = { status: 404, responseText: '{"message": "Not Found"}' }
+            cb(xhr)
 
-              return this
-            }),
-            always: jest.fn().mockReturnThis(),
-            send: jest.fn()
-          }
-        })
-        // subscribe implementation
-        .mockImplementationOnce(() : any => {
-          return {send: mockSend}
-        })
+            return this
+          }),
+          always: jest.fn().mockReturnThis(),
+          send: jest.fn()
+        }
+      })
+    // subscribe implementation
+      .mockImplementationOnce(() : any => {
+        return { send: mockSend }
+      })
 
     const token = 'foo'; const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
     const socket = new Socket({ routes: { connect: connectRoute, subscribe: subscribeRoute } }, token)
@@ -179,32 +179,32 @@ describe('poll', () => {
 
   it('poll fail callback does nothing if not http status code 404', () => {
     request
-        // connect implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '{"status": "success"}' }
-              cb(xhr)
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
-        // poll implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            success: jest.fn().mockReturnThis(),
-            fail: jest.fn(function (this: Request, cb) {
-              const xhr = { status: 400 }
-              cb(xhr)
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn(function (this: Request, cb) {
+            const xhr = { status: 400 }
+            cb(xhr)
 
-              return this
-            }),
-            always: jest.fn().mockReturnThis(),
-            send: jest.fn()
-          }
-        })
+            return this
+          }),
+          always: jest.fn().mockReturnThis(),
+          send: jest.fn()
+        }
+      })
 
     const socket = new Socket({ routes: { connect: '/connect' } }, 'foo')
 
