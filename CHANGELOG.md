@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/supportpal/pollcast-js//compare/v1.0.3...v1.1.0) (2021-08-19)
+
+
+### Features
+
+* resubscribe on disconnect ([#78](https://github.com/supportpal/pollcast-js//issues/78)) ([6083b38](https://github.com/supportpal/pollcast-js//commit/6083b383ff49596b565f9ee391a58a42cc81e15e))
+
 ## [1.0.3](https://github.com/supportpal/pollcast-js//compare/v1.0.2...v1.0.3) (2021-08-04)
 
 
