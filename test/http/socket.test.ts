@@ -127,6 +127,96 @@ describe('poll', () => {
     expect(timeoutSpy).toBeCalledTimes(1)
   })
 
+  it('resubscribes on 404', () => {
+    const mockSend = jest.fn()
+    request
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
+
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn(function (this: Request, cb) {
+            const xhr = { status: 404, responseText: '{"message": "Not Found"}' }
+            cb(xhr)
+
+            return this
+          }),
+          always: jest.fn().mockReturnThis(),
+          send: jest.fn()
+        }
+      })
+    // subscribe implementation
+      .mockImplementationOnce(() : any => {
+        return { send: mockSend }
+      })
+
+    const token = 'foo'; const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
+    const socket = new Socket({ routes: { connect: connectRoute, subscribe: subscribeRoute } }, token)
+
+    const cb = () => {}
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [cb] } },
+      writable: true
+    })
+
+    socket.connect()
+
+    expect(mockSend).toBeCalledTimes(1)
+    expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
+  })
+
+  it('poll fail callback does nothing if not http status code 404', () => {
+    request
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
+
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn(function (this: Request, cb) {
+            const xhr = { status: 400 }
+            cb(xhr)
+
+            return this
+          }),
+          always: jest.fn().mockReturnThis(),
+          send: jest.fn()
+        }
+      })
+
+    const socket = new Socket({ routes: { connect: '/connect' } }, 'foo')
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [() => {}] } },
+      writable: true
+    })
+
+    socket.connect()
+  })
+
   it('always loops', () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
@@ -148,6 +238,7 @@ describe('poll', () => {
       .mockImplementationOnce(() : any => {
         return {
           success: jest.fn().mockReturnThis(),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn(function (this: Request, cb) {
             cb()
 
@@ -195,6 +286,7 @@ describe('poll', () => {
 
             return this
           }),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
@@ -269,6 +361,7 @@ describe('poll', () => {
 
             return this
           }),
+          fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
           send: mockSend
         }
@@ -314,19 +407,33 @@ describe('subscribe', () => {
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
 
-  it('returns if already subscribed', () => {
+  it('does not clear events if already subscribed', () => {
+    const mockSend = jest.fn()
+    request.mockImplementation(() : any => {
+      return {
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = { responseText: '{}' }
+          cb(xhr)
+
+          return this
+        }),
+        send: mockSend
+      }
+    })
+
     const channel = 'channel1'
     const socket = new Socket({ routes: { subscribe: '/subscribe' } }, 'foo')
 
+    const cb = () => {}
     Object.defineProperty(socket, 'channels', {
-      value: { channel1: {} },
+      value: { channel1: { new_message: [cb] } },
       writable: true
     })
 
     socket.subscribe(channel)
 
-    expect(request).toHaveBeenCalledTimes(0)
-    expect(socket.subscribed).toEqual({ channel1: {} })
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 })
 

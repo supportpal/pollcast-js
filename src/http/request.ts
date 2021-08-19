@@ -22,6 +22,17 @@ export class Request {
     return this
   }
 
+  fail (cb: Function): Request {
+    const self = this
+    this.xhr.addEventListener('load', function () {
+      if (self.xhr.readyState > 3 && self.xhr.status !== 200) {
+        cb(self.xhr)
+      }
+    })
+
+    return this
+  }
+
   always (cb: Function): Request {
     const self = this
     this.xhr.addEventListener('loadend', function (e) {

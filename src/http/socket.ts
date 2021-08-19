@@ -67,11 +67,10 @@ export class Socket {
    * Join a channel.
    */
   subscribe (channel: string): void {
-    if (Object.hasOwnProperty.call(this.channels, channel)) {
-      return
+    if (!Object.hasOwnProperty.call(this.channels, channel)) {
+      this.channels[channel] = {}
     }
 
-    this.channels[channel] = {}
     const request = new Request('POST', this.options.routes.subscribe)
     request
       .send({
@@ -184,6 +183,14 @@ export class Socket {
     this.request = new Request('POST', this.options.routes.receive)
     this.request
       .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
+      .fail((xhr: XMLHttpRequest) => {
+        // https://github.com/supportpal/pollcast/issues/7
+        if (xhr.status === 404) {
+          for (const channel in this.channels) {
+            self.subscribe(channel)
+          }
+        }
+      })
       .always(() => {
         /* istanbul ignore next */
         self.timer = setTimeout(() => self.poll(), self.options.polling)
