@@ -9,6 +9,9 @@ export class Request {
 
     this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+    this.fail(function (xhr: XMLHttpRequest) {
+      document.dispatchEvent(new CustomEvent('pollcast:request-error', { detail: xhr }))
+    })
   }
 
   success (cb: Function): Request {
