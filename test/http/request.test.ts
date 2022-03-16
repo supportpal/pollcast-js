@@ -44,8 +44,8 @@ describe('failed requests', () => {
       .success(cb)
       .send()
 
-    const [[, load]] = addEventListener.mock.calls
-    load()
+    expect(addEventListener.mock.calls.length).toBe(2)
+    addEventListener.mock.calls[1][1]()
 
     expect(cb).toBeCalledTimes(0)
   })
