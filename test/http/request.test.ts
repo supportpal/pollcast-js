@@ -44,8 +44,8 @@ describe('failed requests', () => {
       .success(cb)
       .send()
 
-    const [[, load]] = addEventListener.mock.calls
-    load()
+    expect(addEventListener.mock.calls.length).toBe(2)
+    addEventListener.mock.calls[1][1]()
 
     expect(cb).toBeCalledTimes(0)
   })
@@ -57,11 +57,25 @@ describe('failed requests', () => {
       .fail(cb)
       .send()
 
-    const [[, load]] = addEventListener.mock.calls
-    load()
+    expect(addEventListener.mock.calls.length).toBe(2)
+    addEventListener.mock.calls[1][1]()
 
     expect(cb).toBeCalledTimes(1)
     expect(cb).toHaveBeenCalledWith(xhr)
+  })
+
+  it('dispatches event on request failure', (done) => {
+    document.addEventListener('pollcast:request-error', function (e) {
+      // @ts-ignore
+      expect(e.detail).toBe(xhr)
+      done()
+    })
+
+    const request = new Request('GET', 'some/url')
+    request.send()
+
+    expect(addEventListener.mock.calls.length).toBe(1)
+    addEventListener.mock.calls[0][1]()
   })
 })
 
@@ -119,8 +133,8 @@ describe('successful requests', () => {
       .success(cb)
       .send()
 
-    const [[, load]] = addEventListener.mock.calls
-    load()
+    expect(addEventListener.mock.calls.length).toBe(2)
+    addEventListener.mock.calls[1][1]()
 
     expect(cb).toBeCalledTimes(1)
     expect(cb).toHaveBeenCalledWith(xhr)
@@ -134,8 +148,8 @@ describe('successful requests', () => {
       })
       .send()
 
-    const [[, load]] = addEventListener.mock.calls
-    load()
+    expect(addEventListener.mock.calls.length).toBe(2)
+    addEventListener.mock.calls[1][1]()
   })
 
   it('can abort request', () => {
