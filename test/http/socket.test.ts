@@ -1,4 +1,4 @@
-import { mocked } from 'ts-jest/utils'
+import { mocked } from 'jest-mock'
 import { Socket } from '../../src/http/socket'
 import { Request } from '../../src/http/request'
 import WindowVisibility from '../../src/util/window-visibility'
