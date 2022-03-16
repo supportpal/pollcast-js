@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/supportpal/pollcast-js//compare/v1.1.2...v1.1.3) (2022-03-16)
+
+
+### Bug Fixes
+
+* **deps:** bump path-parse from 1.0.6 to 1.0.7 ([#235](https://github.com/supportpal/pollcast-js//issues/235)) ([35a078c](https://github.com/supportpal/pollcast-js//commit/35a078cb85c07cb01151c1bd56e3e174587c9b27))
+
 ## [1.1.2](https://github.com/supportpal/pollcast-js//compare/v1.1.1...v1.1.2) (2021-10-26)
 
 
