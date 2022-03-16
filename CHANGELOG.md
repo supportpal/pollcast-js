@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/supportpal/pollcast-js/compare/v1.1.4...v1.2.0) (2022-03-16)
+
+
+### Features
+
+* add global request fail event ([#232](https://github.com/supportpal/pollcast-js/issues/232)) ([19eab08](https://github.com/supportpal/pollcast-js/commit/19eab083974e1bdb5db327c890ee42e6616d2d7b))
+
 ## [1.1.4](https://github.com/supportpal/pollcast-js//compare/v1.1.3...v1.1.4) (2022-03-16)
 
 
