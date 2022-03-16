@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/supportpal/pollcast-js//compare/v1.1.3...v1.1.4) (2022-03-16)
+
+
+### Bug Fixes
+
+* **deps:** bump follow-redirects from 1.14.7 to 1.14.9 ([#234](https://github.com/supportpal/pollcast-js//issues/234)) ([5c8a3e3](https://github.com/supportpal/pollcast-js//commit/5c8a3e30332fd091d285da67f064a21254601cee))
+
 ## [1.1.3](https://github.com/supportpal/pollcast-js//compare/v1.1.2...v1.1.3) (2022-03-16)
 
 

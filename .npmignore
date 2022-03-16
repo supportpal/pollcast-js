@@ -1,5 +1,6 @@
 /.babelrc
 /.eslintrc.js
+/.idea/
 /.github/
 /.releaserc
 /babel.config.js
