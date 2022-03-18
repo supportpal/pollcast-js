@@ -641,4 +641,59 @@ describe('disconnect', () => {
 
     expect(clearTimeout).toHaveBeenCalledTimes(1)
   })
+
+  it('unsets socket id', () => {
+    const socket = new Socket({}, 'foo')
+    socket.disconnect()
+    expect(socket.id).toBe('')
+  })
+
+  it('stops polling in always callback after disconnect', () => {
+    const mockSend = jest.fn()
+    const timeoutSpy = jest.spyOn(window, 'setTimeout')
+
+    const token = 'foo'; const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } }, token)
+
+    request
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          abort: jest.fn(),
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
+
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          abort: jest.fn(),
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn().mockReturnThis(),
+          always: jest.fn(function (this: Request, cb) {
+            socket.disconnect()
+            cb()
+
+            return this
+          }),
+          send: mockSend
+        }
+      })
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [() => {}] } },
+      writable: true
+    })
+
+    socket.connect()
+
+    expect(mockSend).toBeCalledTimes(1)
+    expect(timeoutSpy).toBeCalledTimes(0)
+  })
 })

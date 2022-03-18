@@ -143,6 +143,7 @@ export class Socket {
    * Disconnect the client from the server.
    */
   disconnect (): void {
+    this.id = ''
     if (this.request) {
       this.request.abort()
     }
@@ -175,8 +176,11 @@ export class Socket {
     }
 
     if (!WindowVisibility.isActive() || isEmptyObject(channels)) {
-      /* istanbul ignore next */
-      self.timer = setTimeout(() => self.poll(), this.options.polling)
+      /* istanbul ignore else */
+      if (this.id !== '') {
+        /* istanbul ignore next */
+        self.timer = setTimeout(() => self.poll(), this.options.polling)
+      }
       return
     }
 
@@ -192,8 +196,11 @@ export class Socket {
         }
       })
       .always(() => {
-        /* istanbul ignore next */
-        self.timer = setTimeout(() => self.poll(), self.options.polling)
+        // only if the socket is active
+        if (this.id !== '') {
+          /* istanbul ignore next */
+          self.timer = setTimeout(() => self.poll(), self.options.polling)
+        }
       })
       .send({
         time: this.universalTime.getTime(),
