@@ -656,34 +656,34 @@ describe('disconnect', () => {
     const socket = new Socket({ routes: { connect: route } }, token)
 
     request
-        // connect implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            abort: jest.fn(),
-            success: jest.fn(function (this: Request, cb) {
-              const xhr = { responseText: '{"status": "success"}' }
-              cb(xhr)
+    // connect implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          abort: jest.fn(),
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = { responseText: '{"status": "success"}' }
+            cb(xhr)
 
-              return this
-            }),
-            send: jest.fn()
-          }
-        })
-        // poll implementation
-        .mockImplementationOnce(() : any => {
-          return {
-            abort: jest.fn(),
-            success: jest.fn().mockReturnThis(),
-            fail: jest.fn().mockReturnThis(),
-            always: jest.fn(function (this: Request, cb) {
-              socket.disconnect()
-              cb()
+            return this
+          }),
+          send: jest.fn()
+        }
+      })
+    // poll implementation
+      .mockImplementationOnce(() : any => {
+        return {
+          abort: jest.fn(),
+          success: jest.fn().mockReturnThis(),
+          fail: jest.fn().mockReturnThis(),
+          always: jest.fn(function (this: Request, cb) {
+            socket.disconnect()
+            cb()
 
-              return this
-            }),
-            send: mockSend
-          }
-        })
+            return this
+          }),
+          send: mockSend
+        }
+      })
 
     WindowVisibility.setActive()
     Object.defineProperty(socket, 'channels', {
