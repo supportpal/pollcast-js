@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/supportpal/pollcast-js/compare/v1.2.1...v1.2.2) (2022-03-18)
+
+
+### Bug Fixes
+
+* unset socket id after disconnection ([#238](https://github.com/supportpal/pollcast-js/issues/238)) ([ebe7f35](https://github.com/supportpal/pollcast-js/commit/ebe7f3589b8cedfe45d47141f9f3ad0f254acd5f))
+
 ## [1.2.1](https://github.com/supportpal/pollcast-js/compare/v1.2.0...v1.2.1) (2022-03-17)
 
 
