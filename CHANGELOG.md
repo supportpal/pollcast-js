@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/supportpal/pollcast-js/compare/v1.2.3...v1.3.0) (2023-04-06)
+
+
+### Features
+
+* add auth header support ([#330](https://github.com/supportpal/pollcast-js/issues/330)) ([951551c](https://github.com/supportpal/pollcast-js/commit/951551c39d842d101c369f74be0a48ec2f1d5def))
+
 ## [1.2.3](https://github.com/supportpal/pollcast-js/compare/v1.2.2...v1.2.3) (2022-04-13)
 
 
