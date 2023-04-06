@@ -72,6 +72,9 @@ export class Socket {
     }
 
     const request = new Request('POST', this.options.routes.subscribe)
+    for (const name in this.options?.auth?.headers) {
+      request.setRequestHeader(name, this.options.auth.headers[name])
+    }
     request
       .send({
         channel_name: channel,
