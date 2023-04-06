@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`connector can join new channel 1`] = `
-Object {
+{
   "foo": Channel {
     "eventFormatter": EventFormatter {
       "namespace": "App.Events",
     },
     "name": "foo",
-    "options": Object {
-      "auth": Object {
-        "headers": Object {},
+    "options": {
+      "auth": {
+        "headers": {},
       },
       "authEndpoint": "/broadcasting/auth",
       "broadcaster": "pusher",
@@ -18,7 +18,7 @@ Object {
       "key": null,
       "namespace": "App.Events",
       "polling": 5000,
-      "routes": Object {
+      "routes": {
         "connect": "",
         "publish": "",
         "receive": "",
@@ -26,13 +26,13 @@ Object {
         "unsubscribe": "",
       },
     },
-    "socket": Object {
+    "socket": {
       "connect": [MockFunction] {
-        "calls": Array [
-          Array [],
+        "calls": [
+          [],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
@@ -40,13 +40,13 @@ Object {
       },
       "disconnect": [MockFunction],
       "subscribe": [MockFunction] {
-        "calls": Array [
-          Array [
+        "calls": [
+          [
             "foo",
           ],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
@@ -59,15 +59,15 @@ Object {
 `;
 
 exports[`connector can join presence channel 1`] = `
-Object {
+{
   "presence-foo": PresenceChannel {
     "eventFormatter": EventFormatter {
       "namespace": "App.Events",
     },
     "name": "presence-foo",
-    "options": Object {
-      "auth": Object {
-        "headers": Object {},
+    "options": {
+      "auth": {
+        "headers": {},
       },
       "authEndpoint": "/broadcasting/auth",
       "broadcaster": "pusher",
@@ -76,7 +76,7 @@ Object {
       "key": null,
       "namespace": "App.Events",
       "polling": 5000,
-      "routes": Object {
+      "routes": {
         "connect": "",
         "publish": "",
         "receive": "",
@@ -84,13 +84,13 @@ Object {
         "unsubscribe": "",
       },
     },
-    "socket": Object {
+    "socket": {
       "connect": [MockFunction] {
-        "calls": Array [
-          Array [],
+        "calls": [
+          [],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
@@ -98,13 +98,13 @@ Object {
       },
       "disconnect": [MockFunction],
       "subscribe": [MockFunction] {
-        "calls": Array [
-          Array [
+        "calls": [
+          [
             "presence-foo",
           ],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
@@ -117,15 +117,15 @@ Object {
 `;
 
 exports[`connector can join private channel 1`] = `
-Object {
+{
   "private-foo": PrivateChannel {
     "eventFormatter": EventFormatter {
       "namespace": "App.Events",
     },
     "name": "private-foo",
-    "options": Object {
-      "auth": Object {
-        "headers": Object {},
+    "options": {
+      "auth": {
+        "headers": {},
       },
       "authEndpoint": "/broadcasting/auth",
       "broadcaster": "pusher",
@@ -134,7 +134,7 @@ Object {
       "key": null,
       "namespace": "App.Events",
       "polling": 5000,
-      "routes": Object {
+      "routes": {
         "connect": "",
         "publish": "",
         "receive": "",
@@ -142,13 +142,13 @@ Object {
         "unsubscribe": "",
       },
     },
-    "socket": Object {
+    "socket": {
       "connect": [MockFunction] {
-        "calls": Array [
-          Array [],
+        "calls": [
+          [],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
@@ -156,13 +156,13 @@ Object {
       },
       "disconnect": [MockFunction],
       "subscribe": [MockFunction] {
-        "calls": Array [
-          Array [
+        "calls": [
+          [
             "private-foo",
           ],
         ],
-        "results": Array [
-          Object {
+        "results": [
+          {
             "type": "return",
             "value": undefined,
           },
