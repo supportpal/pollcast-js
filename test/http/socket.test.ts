@@ -386,6 +386,7 @@ describe('poll', () => {
 describe('subscribe', () => {
   it('sends request', () => {
     const mockSend = jest.fn()
+    const mockSetRequestHeader = jest.fn()
     request.mockImplementation(() : any => {
       return {
         success: jest.fn(function (this: Request, cb) {
@@ -394,15 +395,17 @@ describe('subscribe', () => {
 
           return this
         }),
+        setRequestHeader: mockSetRequestHeader,
         send: mockSend
       }
     })
 
     const token = 'foo'; const route = '/subscribe'; const channel = 'channel1'
-    const socket = new Socket({ routes: { subscribe: route } }, token)
+    const socket = new Socket({ routes: { subscribe: route }, auth: { headers: { 'X-Token': 'foo' } } }, token)
     socket.subscribe(channel)
 
     expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Token', 'foo')
     expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
