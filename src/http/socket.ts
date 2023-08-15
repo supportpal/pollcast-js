@@ -86,14 +86,14 @@ export class Socket {
    * Leave a channel.
    */
   unsubscribe (channel: string): void {
-    const self = this
-    const request = new Request('POST', this.options.routes.unsubscribe)
-    request
-      .success(() => delete self.channels[channel])
-      .send({
-        channel_name: channel,
-        _token: this.options.csrfToken
-      })
+    const data = {
+      channel_name: channel,
+      _token: this.options.csrfToken
+    }
+
+    if ('sendBeacon' in navigator && navigator.sendBeacon(this.options.routes.unsubscribe, new URLSearchParams(data))) {
+      delete this.channels[channel]
+    }
   }
 
   /**
