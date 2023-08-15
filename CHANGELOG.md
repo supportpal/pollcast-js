@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/supportpal/pollcast-js/compare/v1.3.1...v1.3.2) (2023-08-15)
+
+
+### Bug Fixes
+
+* use sendBeacon when unsubscribing from channel ([#343](https://github.com/supportpal/pollcast-js/issues/343)) ([3a47a92](https://github.com/supportpal/pollcast-js/commit/3a47a92e76a30a2f3fd9a9463d8ca88547bd1dc9))
+
 ## [1.3.1](https://github.com/supportpal/pollcast-js/compare/v1.3.0...v1.3.1) (2023-04-06)
 
 
