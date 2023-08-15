@@ -442,16 +442,10 @@ describe('subscribe', () => {
 
 describe('Unsubscribe', () => {
   it('sends request', () => {
-    const mockSend = jest.fn()
-    request.mockImplementation(() : any => {
-      return {
-        success: jest.fn(function (this: Request, cb) {
-          cb()
-
-          return this
-        }),
-        send: mockSend
-      }
+    const sendBeacon = jest.fn().mockImplementation((route, data) => true)
+    Object.defineProperty(window.navigator, 'sendBeacon', {
+      writable: true,
+      value: sendBeacon
     })
 
     const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
@@ -465,9 +459,30 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(sendBeacon).toHaveBeenCalled()
     expect(socket.subscribed).toEqual({})
+  })
+
+  it('send request fails', () => {
+    const sendBeacon = jest.fn().mockImplementation((route, data) => false)
+    Object.defineProperty(window.navigator, 'sendBeacon', {
+      writable: true,
+      value: sendBeacon
+    })
+
+    const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
+
+    const channels : any = {}
+    channels[channel] = {}
+
+    const socket = new Socket({ routes: { unsubscribe: route } }, token)
+    Object.defineProperty(socket, 'channels', { value: channels, writable: true })
+
+    expect(socket.subscribed).toEqual(channels)
+    socket.unsubscribe(channel)
+
+    expect(sendBeacon).toHaveBeenCalled()
+    expect(socket.subscribed).toEqual(channels)
   })
 })
 
