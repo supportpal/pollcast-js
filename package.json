@@ -5,9 +5,10 @@
   "repository": {
     "url": "https://github.com/supportpal/pollcast-js"
   },
-  "main": "dist/pollcast.js",
-  "browser": "dist/pollcast.js",
-  "module": "src/pollcast.js",
+  "main": "./dist/pollcast.js",
+  "exports": "./dist/pollcast.js",
+  "browser": "./dist/pollcast.js",
+  "module": "./src/pollcast.js",
   "scripts": {
     "build": "npx gulp build",
     "lint": "eslint src test --ext .js,.ts",
