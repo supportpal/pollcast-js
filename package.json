@@ -7,7 +7,11 @@
   },
   "main": "dist/pollcast.js",
   "browser": "dist/pollcast.js",
-  "module": "src/pollcast.js",
+  "module": "dist/pollcast.js",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "npx gulp build",
     "lint": "eslint src test --ext .js,.ts",
