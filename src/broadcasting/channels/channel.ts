@@ -9,22 +9,22 @@ export class Channel extends BaseChannel {
   /**
    * The Socket.io client instance.
    */
-  socket: Socket;
+  socket: Socket
 
   /**
    * The name of the channel.
    */
-  name: any;
+  name: any
 
   /**
    * Channel options.
    */
-  options: any;
+  options: any
 
   /**
    * The event formatter.
    */
-  eventFormatter: EventFormatter;
+  eventFormatter: EventFormatter
 
   /**
    * Create a new class instance.

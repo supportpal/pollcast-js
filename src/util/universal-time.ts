@@ -7,7 +7,7 @@
 import { LocalStorage } from './local-storage'
 
 export class UniversalTime {
-  private storage : LocalStorage = new LocalStorage('universal_time');
+  private storage : LocalStorage = new LocalStorage('universal_time')
 
   setTime (time : string) : void {
     this.storage.set('time', time)
