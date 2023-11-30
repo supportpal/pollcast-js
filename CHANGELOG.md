@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/supportpal/pollcast-js/compare/v1.3.2...v1.3.3) (2023-11-30)
+
+
+### Bug Fixes
+
+* package exports ([#403](https://github.com/supportpal/pollcast-js/issues/403)) ([5f11e19](https://github.com/supportpal/pollcast-js/commit/5f11e19836aa024f6129c3b46abb35b870c22882))
+
 ## [1.3.2](https://github.com/supportpal/pollcast-js/compare/v1.3.1...v1.3.2) (2023-08-15)
 
 
