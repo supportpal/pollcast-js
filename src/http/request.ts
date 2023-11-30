@@ -6,6 +6,7 @@ export class Request {
   constructor (method: string, url: string) {
     this.xhr = new window.XMLHttpRequest()
     this.xhr.open(method, url)
+    this.xhr.withCredentials = true
 
     this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
