@@ -13,7 +13,7 @@ export class Connector extends BaseConnector {
   /**
    * All of the subscribed channel names.
    */
-  channels: { [name: string]: Channel } = {};
+  channels: { [name: string]: Channel } = {}
 
   /**
    * Merge the custom options with the defaults.

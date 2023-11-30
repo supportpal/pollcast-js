@@ -27,7 +27,7 @@ export class Socket {
   /**
    * The current XHR request.
    */
-  private request: Request | undefined;
+  private request: Request | undefined
 
   /**
    * Subscribed channels.
@@ -136,8 +136,8 @@ export class Socket {
     request
       .send({
         channel_name: channel,
-        event: event,
-        data: data,
+        event,
+        data,
         _token: this.options.csrfToken
       })
   }
@@ -207,7 +207,7 @@ export class Socket {
       })
       .send({
         time: this.universalTime.getTime(),
-        channels: channels,
+        channels,
         _token: this.options.csrfToken
       })
   }
