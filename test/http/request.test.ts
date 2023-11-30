@@ -17,11 +17,11 @@ beforeEach(() => {
   addEventListener = jest.fn()
   abort = jest.fn()
   xhr = {
-    open: open,
-    send: send,
-    setRequestHeader: setRequestHeader,
-    addEventListener: addEventListener,
-    abort: abort,
+    open,
+    send,
+    setRequestHeader,
+    addEventListener,
+    abort,
     readyState: 4,
     status: 200
   }
