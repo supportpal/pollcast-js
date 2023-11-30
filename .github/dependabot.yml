@@ -18,3 +18,27 @@ updates:
       prefix: "fix"
       prefix-development: "chore"
       include: "scope"
+    groups:
+       # Specify a name for the group, which will be used in pull request titles
+       # and branch names
+       eslint:
+          patterns:
+            - "@typescript-eslint/eslint-plugin"
+            - "@typescript-eslint/parser"
+            - "eslint"
+            - "eslint-*"
+        jest:
+          patterns:
+            - "jest"
+            - "jest-*"
+        babel:
+          patterns:
+            - "@babel/*"
+        rollup:
+          patterns:
+            - "rollup"
+            - "@rollup/*"
+        gulp:
+          patterns:
+            - "gulp"
+            - "gulp-*"
