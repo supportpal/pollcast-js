@@ -1,4 +1,4 @@
-import { LocalStorage } from '../../src/util/local-storage'
+import { LocalStorage } from '../local-storage'
 
 describe('local storage', () => {
   it('can get when no values are stored', () => {

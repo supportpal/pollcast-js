@@ -1,4 +1,4 @@
-import { Request } from '../../src/http/request'
+import { Request } from '../request'
 
 let open :any,
   setRequestHeader : any,

@@ -1,10 +1,10 @@
-import { Connector } from '../../src/broadcasting/connector'
+import { Connector } from '../connector'
 
 const mockConnect = jest.fn()
 const mockSubscribe = jest.fn()
 const mockUnsubscribe = jest.fn()
 const mockDisconnect = jest.fn()
-jest.mock('../../src/http/socket', () => {
+jest.mock('../../http/socket', () => {
   return {
     Socket: jest.fn().mockImplementation(() => {
       return {

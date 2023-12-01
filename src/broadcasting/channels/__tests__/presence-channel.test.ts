@@ -1,5 +1,5 @@
-import { Socket } from '../../../src/http/socket'
-import { PresenceChannel } from '../../../src/broadcasting/channels/presence-channel'
+import { Socket } from '../../../http/socket'
+import { PresenceChannel } from '../presence-channel'
 
 beforeEach(() => jest.clearAllMocks())
 

@@ -1,4 +1,4 @@
-import { UniversalTime } from '../../src/util/universal-time'
+import { UniversalTime } from '../universal-time'
 
 describe('universal time', () => {
   it('can get time undefined', () => {

@@ -1,5 +1,5 @@
-import WindowVisibility from '../../src/util/window-visibility'
-import { LocalStorage } from '../../src/util/local-storage'
+import WindowVisibility from '../window-visibility'
+import { LocalStorage } from '../local-storage'
 
 describe('window visibility', () => {
   it('defaults to active', () => {

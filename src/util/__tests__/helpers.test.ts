@@ -1,4 +1,4 @@
-import { urlEncodeObject, uuid } from '../../src/util/helpers'
+import { urlEncodeObject, uuid } from '../helpers'
 
 describe('url encode', () => {
   it('string', () => {
