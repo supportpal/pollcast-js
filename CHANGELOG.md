@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/supportpal/pollcast-js/compare/v1.3.3...v1.4.0) (2023-12-04)
+
+
+### Features
+
+* add typescript declaration files ([#411](https://github.com/supportpal/pollcast-js/issues/411)) ([80a6998](https://github.com/supportpal/pollcast-js/commit/80a69987be0d784d090cbf7479a9c79e58d3a8d5))
+
 ## [1.3.3](https://github.com/supportpal/pollcast-js/compare/v1.3.2...v1.3.3) (2023-11-30)
 
 
