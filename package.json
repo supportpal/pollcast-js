@@ -15,8 +15,8 @@
   ],
   "scripts": {
     "build": "npx gulp build",
-    "lint": "eslint src test --ext .js,.ts",
-    "lint:fix": "eslint src test --ext .js,.ts --fix",
+    "lint": "eslint . --ignore-path .gitignore --ext .js,.ts",
+    "lint:fix": "eslint . --ignore-path .gitignore --ext .js,.ts --fix",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "bundlewatch": "bundlewatch"

@@ -1,6 +1,6 @@
 const gulp = require('gulp')
-const rollup = require('rollup');
-const {babel} = require('@rollup/plugin-babel')
+const rollup = require('rollup')
+const { babel } = require('@rollup/plugin-babel')
 const typescript = require('@rollup/plugin-typescript')
 const uglify = require('gulp-uglify')
 const rename = require('gulp-rename')
@@ -34,8 +34,8 @@ gulp.task('build', gulp.series(
         file: './dist/pollcast.js',
         format: 'umd',
         name: 'Pollcast',
-        banner: banner
-      });
+        banner
+      })
     })
   },
   () => {
@@ -44,4 +44,4 @@ gulp.task('build', gulp.series(
       .pipe(gulpif(!skipMinification, rename('pollcast.min.js')))
       .pipe(gulpif(!skipMinification, gulp.dest('dist')))
   }
-));
+))
