@@ -2,6 +2,7 @@ const gulp = require('gulp')
 const rollup = require('rollup')
 const { babel } = require('@rollup/plugin-babel')
 const typescript = require('@rollup/plugin-typescript')
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const uglify = require('gulp-uglify')
 const rename = require('gulp-rename')
 const gulpif = require('gulp-if')
@@ -21,6 +22,7 @@ gulp.task('build', gulp.series(
     return rollup.rollup({
       input: 'src/pollcast.ts',
       plugins: [
+        nodeResolve(),
         // convert typescript to ecmascript
         typescript(),
         // transpile es6 to es5
