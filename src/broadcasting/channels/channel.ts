@@ -1,5 +1,4 @@
-import { Channel as BaseChannel } from 'laravel-echo'
-import { EventFormatter } from 'laravel-echo'
+import { Channel as BaseChannel, EventFormatter } from 'laravel-echo'
 import { Socket } from '../../http/socket'
 
 /**
