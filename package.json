@@ -8,7 +8,7 @@
   "main": "dist/pollcast.js",
   "browser": "dist/pollcast.js",
   "module": "dist/pollcast.js",
-  "types": "dist/types/src/pollcast.d.ts",
+  "types": "dist/types/pollcast.d.ts",
   "files": [
     "dist",
     "src"
