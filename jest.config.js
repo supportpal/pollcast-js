@@ -1,19 +1,16 @@
 module.exports = {
-  testEnvironment: "jsdom",
-  testMatch: [
-    '<rootDir>/test/**/?(*.)(test).{js,jsx,ts,tsx}'
-  ],
+  testEnvironment: 'jsdom',
   transformIgnorePatterns: [
-    "node_modules/(?!(laravel-echo)/)",
+    'node_modules/(?!(laravel-echo)/)'
   ],
-  "collectCoverage": true,
-  "coverageReporters": ["html", "lcov"],
-  "coverageThreshold": {
-    "global": {
-      "branches": 100,
-      "functions": 100,
-      "lines": 100,
-      "statements": 100
+  collectCoverage: true,
+  coverageReporters: ['html', 'lcov'],
+  coverageThreshold: {
+    global: {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100
     }
   }
 }

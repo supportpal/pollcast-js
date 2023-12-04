@@ -1,10 +1,10 @@
 import { mocked } from 'jest-mock'
-import { Socket } from '../../src/http/socket'
-import { Request } from '../../src/http/request'
-import WindowVisibility from '../../src/util/window-visibility'
+import { Socket } from '../socket'
+import { Request } from '../request'
+import WindowVisibility from '../../util/window-visibility'
 
 const request = mocked(Request, true)
-jest.mock('../../src/http/request', () => {
+jest.mock('../request', () => {
   return {
     Request: jest.fn()
   }

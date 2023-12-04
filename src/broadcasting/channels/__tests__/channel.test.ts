@@ -1,11 +1,11 @@
-import { Channel } from '../../../src/broadcasting/channels/channel'
-import { Socket } from '../../../src/http/socket'
+import { Channel } from '../channel'
+import { Socket } from '../../../http/socket'
 
 const mockSubscribe = jest.fn()
 const mockUnsubscribe = jest.fn()
 const mockOn = jest.fn()
 const mockOff = jest.fn()
-jest.mock('../../../src/http/socket', () => {
+jest.mock('../../../http/socket', () => {
   return {
     Socket: jest.fn().mockImplementation(() => {
       return {

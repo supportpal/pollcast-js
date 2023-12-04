@@ -1,9 +1,9 @@
-import { Socket } from '../../../src/http/socket'
-import { PrivateChannel } from '../../../src/broadcasting/channels/private-channel'
+import { Socket } from '../../../http/socket'
+import { PrivateChannel } from '../private-channel'
 
 const mockSubscribe = jest.fn()
 const mockEmit = jest.fn()
-jest.mock('../../../src/http/socket', () => {
+jest.mock('../../../http/socket', () => {
   return {
     Socket: jest.fn().mockImplementation(() => {
       return {

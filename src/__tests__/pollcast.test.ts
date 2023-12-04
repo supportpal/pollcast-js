@@ -1,5 +1,5 @@
-import PollcastConnector from '../src/pollcast'
-import { Connector } from '../src/broadcasting/connector'
+import PollcastConnector from '../pollcast'
+import { Connector } from '../broadcasting/connector'
 
 describe('Pollcast', () => {
   it('to be instance of connector', () => {

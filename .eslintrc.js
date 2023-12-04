@@ -2,7 +2,7 @@ module.exports = {
   env: {
     browser: true,
     es2021: true,
-    "jest/globals": true
+    'jest/globals': true
   },
   extends: [
     'standard'
@@ -17,7 +17,7 @@ module.exports = {
     'jest'
   ],
   rules: {
-    "indent": "off",
-    "@typescript-eslint/indent": ["error", 2]
+    indent: 'off',
+    '@typescript-eslint/indent': ['error', 2]
   }
 }

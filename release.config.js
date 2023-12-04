@@ -4,21 +4,21 @@ module.exports = {
   verifyConditions: [
     '@semantic-release/changelog',
     '@semantic-release/npm',
-    '@semantic-release/github',
+    '@semantic-release/github'
   ],
   prepare: [
     '@semantic-release/changelog',
     '@semantic-release/npm',
-    '@semantic-release/git',
+    '@semantic-release/git'
   ],
   publish: [
     '@semantic-release/npm',
     ['@semantic-release/github', {
-      'assets': [
-        { 'path': 'dist/pollcast.js' },
-        { 'path': 'dist/pollcast.min.js' },
+      assets: [
+        { path: 'dist/pollcast.js' },
+        { path: 'dist/pollcast.min.js' }
       ]
-    }],
+    }]
   ],
-  success: ['@semantic-release/github'],
+  success: ['@semantic-release/github']
 }

@@ -1,4 +1,4 @@
-import { Connector as BaseConnector } from 'laravel-echo/src/connector'
+import { Connector as BaseConnector } from 'laravel-echo'
 import { Channel } from './channels/channel'
 import { PrivateChannel } from './channels/private-channel'
 import { PresenceChannel } from './channels/presence-channel'

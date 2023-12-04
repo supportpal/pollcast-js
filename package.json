@@ -8,14 +8,15 @@
   "main": "dist/pollcast.js",
   "browser": "dist/pollcast.js",
   "module": "dist/pollcast.js",
+  "types": "dist/types/pollcast.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
     "build": "npx gulp build",
-    "lint": "eslint src test --ext .js,.ts",
-    "lint:fix": "eslint src test --ext .js,.ts --fix",
+    "lint": "eslint . --ignore-path .gitignore --ext .js,.ts",
+    "lint:fix": "eslint . --ignore-path .gitignore --ext .js,.ts --fix",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "bundlewatch": "bundlewatch"
@@ -23,7 +24,7 @@
   "author": "Kieran brahney",
   "license": "MIT",
   "dependencies": {
-    "laravel-echo": "^1.11.0"
+    "laravel-echo": "^1.15.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
@@ -32,6 +33,7 @@
     "@babel/preset-env": "7.23.5",
     "@babel/preset-typescript": "^7.14.5",
     "@rollup/plugin-babel": "^6.0.3",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.0",
     "@tsconfig/recommended": "^1.0.1",
     "@types/jest": "^29.2.3",
