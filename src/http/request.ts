@@ -6,7 +6,6 @@ export class Request {
   constructor (method: string, url: string) {
     this.xhr = new window.XMLHttpRequest()
     this.xhr.open(method, url)
-    this.xhr.withCredentials = true
 
     this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
@@ -42,6 +41,12 @@ export class Request {
     this.xhr.addEventListener('loadend', function (e) {
       cb(self.xhr, e)
     })
+
+    return this
+  }
+
+  setWithCredentials(value: boolean): Request {
+    this.xhr.withCredentials = value
 
     return this
   }
