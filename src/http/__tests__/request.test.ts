@@ -22,6 +22,7 @@ beforeEach(() => {
     setRequestHeader,
     addEventListener,
     abort,
+    withCredentials: false,
     readyState: 4,
     status: 200
   }
@@ -170,5 +171,29 @@ describe('successful requests', () => {
     load()
 
     expect(cb).toBeCalledTimes(0)
+  })
+})
+
+describe('the setWithCredentials method in the Request class', () => {
+  let req: Request
+
+  beforeEach(() => {
+    req = new Request('GET', '/')
+  })
+
+  test('sets withCredentials to the correct value when setWithCredentials is called with true', () => {
+    req.setWithCredentials(true)
+    expect(xhr.withCredentials).toBe(true)
+  })
+
+  test('sets withCredentials to the correct value when setWithCredentials is called with false', () => {
+    req.setWithCredentials(false)
+    expect(xhr.withCredentials).toBe(false)
+  })
+
+  test('returns the Request instance for method chaining', () => {
+    const returnedReq = req.setWithCredentials(true)
+
+    expect(returnedReq).toBeInstanceOf(Request)
   })
 })

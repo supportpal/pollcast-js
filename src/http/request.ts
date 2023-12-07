@@ -45,6 +45,12 @@ export class Request {
     return this
   }
 
+  setWithCredentials (value: boolean): Request {
+    this.xhr.withCredentials = value
+
+    return this
+  }
+
   setRequestHeader (name: string, value: string): Request {
     this.xhr.setRequestHeader(name, value)
 

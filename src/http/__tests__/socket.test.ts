@@ -1,9 +1,8 @@
-import { mocked } from 'jest-mock'
 import { Socket } from '../socket'
 import { Request } from '../request'
 import WindowVisibility from '../../util/window-visibility'
 
-const request = mocked(Request, true)
+const request = jest.mocked(Request)
 jest.mock('../request', () => {
   return {
     Request: jest.fn()
@@ -39,6 +38,7 @@ describe('connect', () => {
 
           return this
         }),
+        setWithCredentials: jest.fn(),
         send: mockSend
       }
     })
@@ -60,6 +60,7 @@ describe('connect', () => {
 
           return this
         }),
+        setWithCredentials: jest.fn(),
         send: jest.fn()
       }
     })
@@ -81,6 +82,7 @@ describe('connect', () => {
 
           return this
         }),
+        setWithCredentials: jest.fn(),
         send: jest.fn()
       }
     })
@@ -108,6 +110,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           send: jest.fn()
         }
       })
@@ -133,6 +136,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '{"status": "success"}' }
             cb(xhr)
@@ -145,6 +149,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn().mockReturnThis(),
           fail: jest.fn(function (this: Request, cb) {
             const xhr = { status: 404, responseText: '{"message": "Not Found"}' }
@@ -158,7 +163,7 @@ describe('poll', () => {
       })
     // subscribe implementation
       .mockImplementationOnce(() : any => {
-        return { send: mockSend }
+        return { setWithCredentials: jest.fn(), send: mockSend }
       })
 
     const token = 'foo'; const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
@@ -182,6 +187,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '{"status": "success"}' }
             cb(xhr)
@@ -194,6 +200,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn().mockReturnThis(),
           fail: jest.fn(function (this: Request, cb) {
             const xhr = { status: 400 }
@@ -231,6 +238,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           send: jest.fn()
         }
       })
@@ -244,6 +252,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           send: mockSend
         }
       })
@@ -274,6 +283,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           send: jest.fn()
         }
       })
@@ -286,6 +296,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
           send: jest.fn()
@@ -309,6 +320,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '{"status": "success"}' }
             cb(xhr)
@@ -327,6 +339,7 @@ describe('poll', () => {
 
             return this
           }),
+          setWithCredentials: jest.fn(),
           always: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
@@ -343,6 +356,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '{"status": "success"}' }
             cb(xhr)
@@ -355,6 +369,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '"foo"' }
             cb(xhr)
@@ -389,6 +404,7 @@ describe('subscribe', () => {
     const mockSetRequestHeader = jest.fn()
     request.mockImplementation(() : any => {
       return {
+        setWithCredentials: jest.fn(),
         success: jest.fn(function (this: Request, cb) {
           const xhr = { responseText: '{}' }
           cb(xhr)
@@ -414,6 +430,7 @@ describe('subscribe', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => {
       return {
+        setWithCredentials: jest.fn(),
         success: jest.fn(function (this: Request, cb) {
           const xhr = { responseText: '{}' }
           cb(xhr)
@@ -575,7 +592,7 @@ describe('emit', () => {
   it('sends request', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => {
-      return { send: mockSend }
+      return { setWithCredentials: jest.fn(), send: mockSend }
     })
 
     const token = 'foo'; const route = '/publish'
@@ -632,7 +649,7 @@ describe('disconnect', () => {
   it('aborts active request', () => {
     const abortMock = jest.fn()
     request.mockImplementation(() : any => {
-      return { abort: abortMock }
+      return { setWithCredentials: jest.fn(), abort: abortMock }
     })
 
     const socket = new Socket({}, 'foo')
@@ -677,6 +694,7 @@ describe('disconnect', () => {
     // connect implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           abort: jest.fn(),
           success: jest.fn(function (this: Request, cb) {
             const xhr = { responseText: '{"status": "success"}' }
@@ -690,6 +708,7 @@ describe('disconnect', () => {
     // poll implementation
       .mockImplementationOnce(() : any => {
         return {
+          setWithCredentials: jest.fn(),
           abort: jest.fn(),
           success: jest.fn().mockReturnThis(),
           fail: jest.fn().mockReturnThis(),

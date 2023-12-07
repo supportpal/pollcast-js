@@ -44,7 +44,7 @@ export class Socket {
    */
   connect (): void {
     const self = this
-    this.request = new Request('POST', this.options.routes.connect)
+    this.request = this.createRequest('POST', this.options.routes.connect)
     this.request
       .success(function (xhr: XMLHttpRequest) {
         const response = JSON.parse(xhr.responseText)
@@ -71,7 +71,7 @@ export class Socket {
       this.channels[channel] = {}
     }
 
-    const request = new Request('POST', this.options.routes.subscribe)
+    const request = this.createRequest('POST', this.options.routes.subscribe)
     for (const name in this.options?.auth?.headers) {
       request.setRequestHeader(name, this.options.auth.headers[name])
     }
@@ -132,7 +132,7 @@ export class Socket {
    * Publish a message from the client to the server.
    */
   emit (channel: string, event: string, data: any): void {
-    const request = new Request('POST', this.options.routes.publish)
+    const request = this.createRequest('POST', this.options.routes.publish)
     request
       .send({
         channel_name: channel,
@@ -170,6 +170,13 @@ export class Socket {
     }
   }
 
+  private createRequest (method: string, url: string): Request {
+    const request = new Request(method, url)
+    request.setWithCredentials(this.options.withCredentials || false)
+
+    return request
+  }
+
   private poll (): void {
     const self = this
 
@@ -187,7 +194,7 @@ export class Socket {
       return
     }
 
-    this.request = new Request('POST', this.options.routes.receive)
+    this.request = this.createRequest('POST', this.options.routes.receive)
     this.request
       .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
       .fail((xhr: XMLHttpRequest) => {
