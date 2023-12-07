@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/supportpal/pollcast-js/compare/v1.4.0...v1.4.1) (2023-12-07)
+
+
+### Bug Fixes
+
+* allow cross-site requests with credentials ([#410](https://github.com/supportpal/pollcast-js/issues/410)) ([642c53e](https://github.com/supportpal/pollcast-js/commit/642c53e986e0bd33c6c0dbbe98d1f39ec62abf1d))
+
 # [1.4.0](https://github.com/supportpal/pollcast-js/compare/v1.3.3...v1.4.0) (2023-12-04)
 
 
