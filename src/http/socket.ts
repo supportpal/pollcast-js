@@ -172,7 +172,7 @@ export class Socket {
 
   private createRequest (method: string, url: string): Request {
     const request = new Request(method, url)
-    request.setWithCredentials(this.options.withCredentials || false);
+    request.setWithCredentials(this.options.withCredentials || false)
 
     return request
   }

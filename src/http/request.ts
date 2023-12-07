@@ -45,7 +45,7 @@ export class Request {
     return this
   }
 
-  setWithCredentials(value: boolean): Request {
+  setWithCredentials (value: boolean): Request {
     this.xhr.withCredentials = value
 
     return this
