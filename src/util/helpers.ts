@@ -9,7 +9,7 @@ const isEmptyObject = function (obj : any) : boolean {
  * URL encode a key value pair.
  */
 const urlEncode = function (key: string, value: string): string {
-  return encodeURIComponent(key) + '=' + encodeURIComponent(value)
+      return encodeURIComponent(key) + '=' + encodeURIComponent(value)
 }
 
 /**
