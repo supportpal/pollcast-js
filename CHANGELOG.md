@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/supportpal/pollcast-js/compare/v1.4.1...v1.4.2) (2024-11-20)
+
+
+### Bug Fixes
+
+* **deps:** bump axios and bundlewatch ([#510](https://github.com/supportpal/pollcast-js/issues/510)) ([a01fb3e](https://github.com/supportpal/pollcast-js/commit/a01fb3ed99a2284d1546ee2bfb9bf9a12a7ee653))
+
 ## [1.4.1](https://github.com/supportpal/pollcast-js/compare/v1.4.0...v1.4.1) (2023-12-07)
 
 
