@@ -1,5 +1,4 @@
 import { Request } from './request'
-import { UniversalTime } from '../util/universal-time'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
 
@@ -17,7 +16,7 @@ export class Socket {
   /**
    * Poll for data which has been created since this timestamp.
    */
-  private universalTime: UniversalTime = new UniversalTime()
+  private lastRequestTime: string = ''
 
   /**
    * Function used to short poll every so many milliseconds.
@@ -52,7 +51,7 @@ export class Socket {
           return
         }
 
-        self.universalTime.setTime(response.time)
+        self.lastRequestTime = response.time
         self.id = response.id
         self.poll()
       })
@@ -213,7 +212,7 @@ export class Socket {
         }
       })
       .send({
-        time: this.universalTime.getTime(),
+        time: this.lastRequestTime,
         channels,
         _token: this.options.csrfToken
       })
@@ -225,7 +224,7 @@ export class Socket {
       return
     }
 
-    this.universalTime.setTime(response.time)
+    this.lastRequestTime = response.time
 
     Object.keys(response.events).forEach((event) => {
       const item = response.events[event]
