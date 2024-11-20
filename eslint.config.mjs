@@ -37,6 +37,9 @@ export default tseslint.config(
     rules: {
       indent: 'off',
       "@typescript-eslint/no-explicit-any": "off",
+      '@typescript-eslint/no-this-alias': 'warn',
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
       '@stylistic/ts/indent': ['error', 2]
     },
   },
@@ -44,5 +47,16 @@ export default tseslint.config(
     // enable jest rules on test files
     files: ['**/*.test.ts'],
     extends: [jest.configs['flat/recommended']],
+    rules: {
+      'jest/no-done-callback': 'warn',
+    }
   },
+  {
+    files: ['*.config.js', '*.config.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      }
+    }
+  }
 );
