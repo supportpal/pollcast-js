@@ -12,7 +12,7 @@ describe('presence channel', () => {
     const channel = new PresenceChannel(mockSocket, 'foo', {})
     channel.here(() => {})
 
-    expect(mockSocket.on).toBeCalledTimes(1)
+    expect(mockSocket.on).toHaveBeenCalledTimes(1)
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:subscription_succeeded', expect.any(Function))
   })
 
@@ -43,7 +43,7 @@ describe('presence channel', () => {
     const channel = new PresenceChannel(mockSocket, 'foo', {})
     channel.joining(() => {})
 
-    expect(mockSocket.on).toBeCalledTimes(1)
+    expect(mockSocket.on).toHaveBeenCalledTimes(1)
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:member_added', expect.any(Function))
   })
 
@@ -72,7 +72,7 @@ describe('presence channel', () => {
     const channel = new PresenceChannel(mockSocket, 'foo', {})
     channel.leaving(() => {})
 
-    expect(mockSocket.on).toBeCalledTimes(1)
+    expect(mockSocket.on).toHaveBeenCalledTimes(1)
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:member_removed', expect.any(Function))
   })
 

@@ -22,7 +22,7 @@ describe('private channel', () => {
     const channel = new PrivateChannel(mockSocket, 'foo', {})
     channel.whisper('typing', { text: 'ba' })
 
-    expect(mockEmit).toBeCalledTimes(1)
+    expect(mockEmit).toHaveBeenCalledTimes(1)
     expect(mockEmit).toHaveBeenCalledWith('foo', 'client-typing', { text: 'ba' })
   })
 })

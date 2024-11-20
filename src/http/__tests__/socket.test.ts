@@ -70,7 +70,7 @@ describe('connect', () => {
     socket.connect()
 
     expect(socket.id).toEqual(1)
-    expect(pollSpy).toBeCalledTimes(1)
+    expect(pollSpy).toHaveBeenCalledTimes(1)
   })
 
   it('exits when returns unexpected response', () => {
@@ -91,7 +91,7 @@ describe('connect', () => {
     const socket = new Socket({ routes: { connect: route } }, token)
     socket.connect()
 
-    expect(pollSpy).toBeCalledTimes(0)
+    expect(pollSpy).toHaveBeenCalledTimes(0)
     expect(socket.id).toEqual('')
   })
 })
@@ -127,7 +127,7 @@ describe('poll', () => {
     const socket = new Socket({ routes: { connect: route } }, token)
     socket.connect()
 
-    expect(timeoutSpy).toBeCalledTimes(1)
+    expect(timeoutSpy).toHaveBeenCalledTimes(1)
   })
 
   it('resubscribes on 404', () => {
@@ -177,7 +177,7 @@ describe('poll', () => {
 
     socket.connect()
 
-    expect(mockSend).toBeCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
@@ -268,8 +268,8 @@ describe('poll', () => {
 
     socket.connect()
 
-    expect(mockSend).toBeCalledTimes(1)
-    expect(timeoutSpy).toBeCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(timeoutSpy).toHaveBeenCalledTimes(1)
   })
 
   it('fires events', (done) => {
@@ -393,8 +393,8 @@ describe('poll', () => {
 
     socket.connect()
 
-    expect(mockSend).toBeCalledTimes(1)
-    expect(socket.dispatch).toBeCalledTimes(0)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(socket.dispatch).toHaveBeenCalledTimes(0)
   })
 })
 
@@ -615,7 +615,7 @@ describe('dispatch', () => {
 
     socket.dispatch('doesnt_exist', 'bar', {})
 
-    expect(cb).toBeCalledTimes(0)
+    expect(cb).toHaveBeenCalledTimes(0)
   })
 
   it('returns when event doesnt exist', () => {
@@ -628,7 +628,7 @@ describe('dispatch', () => {
 
     socket.dispatch('foo', 'doesnt_exist', {})
 
-    expect(cb).toBeCalledTimes(0)
+    expect(cb).toHaveBeenCalledTimes(0)
   })
 
   it('dispatches event', () => {
@@ -641,7 +641,7 @@ describe('dispatch', () => {
 
     socket.dispatch('foo', 'bar', {})
 
-    expect(cb).toBeCalledTimes(1)
+    expect(cb).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -730,7 +730,7 @@ describe('disconnect', () => {
 
     socket.connect()
 
-    expect(mockSend).toBeCalledTimes(1)
-    expect(timeoutSpy).toBeCalledTimes(0)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(timeoutSpy).toHaveBeenCalledTimes(0)
   })
 })

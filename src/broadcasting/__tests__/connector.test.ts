@@ -33,13 +33,13 @@ describe('connector', () => {
   it('constructor calls connect', () => {
     const connector = new Connector({})
     expect(connector).toBeInstanceOf(Connector)
-    expect(mockConnect).toBeCalledTimes(1)
+    expect(mockConnect).toHaveBeenCalledTimes(1)
   })
 
   it('can join new channel', () => {
     const connector = new Connector({})
     connector.channel('foo')
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
     expect(connector.channels).toMatchSnapshot()
   })
 
@@ -48,13 +48,13 @@ describe('connector', () => {
     const channel1 = connector.channel('foo')
     const channel2 = connector.channel('foo')
     expect(channel1).toBe(channel2)
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
   })
 
   it('can join private channel', () => {
     const connector = new Connector({})
     connector.privateChannel('foo')
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
     expect(connector.channels).toMatchSnapshot()
   })
 
@@ -63,13 +63,13 @@ describe('connector', () => {
     const channel1 = connector.privateChannel('foo')
     const channel2 = connector.privateChannel('foo')
     expect(channel1).toBe(channel2)
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
   })
 
   it('can join presence channel', () => {
     const connector = new Connector({})
     connector.presenceChannel('foo')
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
     expect(connector.channels).toMatchSnapshot()
   })
 
@@ -78,7 +78,7 @@ describe('connector', () => {
     const channel1 = connector.presenceChannel('foo')
     const channel2 = connector.presenceChannel('foo')
     expect(channel1).toBe(channel2)
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
   })
 
   it('leaves all channels', () => {
@@ -91,7 +91,7 @@ describe('connector', () => {
 
     connector.leave('foo')
 
-    expect(mockUnsubscribe).toBeCalledTimes(3)
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(3)
     expect(Object.keys(connector.channels)).toHaveLength(0)
   })
 
@@ -103,7 +103,7 @@ describe('connector', () => {
 
     connector.leaveChannel('foo')
 
-    expect(mockUnsubscribe).toBeCalledTimes(1)
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1)
     expect(Object.keys(connector.channels)).toHaveLength(0)
   })
 
@@ -112,7 +112,7 @@ describe('connector', () => {
 
     connector.leaveChannel('foo')
 
-    expect(mockUnsubscribe).toBeCalledTimes(0)
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(0)
   })
 
   it('returns socket id', () => {
@@ -129,13 +129,13 @@ describe('connector', () => {
   it('can disconnect', () => {
     const connector = new Connector({})
     connector.disconnect()
-    expect(mockDisconnect).toBeCalledTimes(1)
+    expect(mockDisconnect).toHaveBeenCalledTimes(1)
   })
 
   it('disconnect does nothing if socket is not set', () => {
     const connector = new Connector({})
     connector.socket = undefined
     connector.disconnect()
-    expect(mockDisconnect).toBeCalledTimes(0)
+    expect(mockDisconnect).toHaveBeenCalledTimes(0)
   })
 })
