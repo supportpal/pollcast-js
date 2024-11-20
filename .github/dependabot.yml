@@ -23,10 +23,12 @@ updates:
       # and branch names
       eslint:
         patterns:
-          - "@typescript-eslint/eslint-plugin"
-          - "@typescript-eslint/parser"
+          - "@eslint/*"
           - "eslint"
           - "eslint-*"
+          - "typescript-eslint"
+          - "@stylistic/eslint-*"
+          - "globals"
       jest:
         patterns:
           - "jest"
