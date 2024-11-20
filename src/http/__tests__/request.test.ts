@@ -48,7 +48,7 @@ describe('failed requests', () => {
     expect(addEventListener.mock.calls.length).toBe(2)
     addEventListener.mock.calls[1][1]()
 
-    expect(cb).toBeCalledTimes(0)
+    expect(cb).toHaveBeenCalledTimes(0)
   })
 
   it('runs fail callback', () => {
@@ -61,13 +61,13 @@ describe('failed requests', () => {
     expect(addEventListener.mock.calls.length).toBe(2)
     addEventListener.mock.calls[1][1]()
 
-    expect(cb).toBeCalledTimes(1)
+    expect(cb).toHaveBeenCalledTimes(1)
     expect(cb).toHaveBeenCalledWith(xhr)
   })
 
   it('dispatches event on request failure', (done) => {
     document.addEventListener('pollcast:request-error', function (e) {
-      // @ts-ignore
+      // @ts-expect-error ???
       expect(e.detail).toBe(xhr)
       done()
     })
@@ -82,9 +82,9 @@ describe('failed requests', () => {
 
 describe('successful requests', () => {
   it('opens xhr and sets headers', () => {
-    /* eslint-disable no-new */
+     
     new Request('GET', 'some/url')
-    /* eslint-enable no-new */
+     
 
     expect(open).toHaveBeenCalledWith('GET', 'some/url')
     expect(setRequestHeader.mock.calls.length).toBe(2)
@@ -137,7 +137,7 @@ describe('successful requests', () => {
     expect(addEventListener.mock.calls.length).toBe(2)
     addEventListener.mock.calls[1][1]()
 
-    expect(cb).toBeCalledTimes(1)
+    expect(cb).toHaveBeenCalledTimes(1)
     expect(cb).toHaveBeenCalledWith(xhr)
   })
 
@@ -170,7 +170,7 @@ describe('successful requests', () => {
     const [[, load]] = addEventListener.mock.calls
     load()
 
-    expect(cb).toBeCalledTimes(0)
+    expect(cb).toHaveBeenCalledTimes(0)
   })
 })
 

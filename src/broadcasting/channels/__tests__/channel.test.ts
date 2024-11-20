@@ -26,7 +26,7 @@ describe('public channel', () => {
     const channel = new Channel(mockSocket, 'foo', {})
 
     expect(channel).toBeInstanceOf(Channel)
-    expect(mockSubscribe).toBeCalledTimes(1)
+    expect(mockSubscribe).toHaveBeenCalledTimes(1)
     expect(mockSubscribe).toHaveBeenCalledWith('foo')
   })
 
@@ -35,7 +35,7 @@ describe('public channel', () => {
     const channel = new Channel(mockSocket, 'foo', {})
     channel.unsubscribe()
 
-    expect(mockUnsubscribe).toBeCalledTimes(1)
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1)
     expect(mockUnsubscribe).toHaveBeenCalledWith('foo')
   })
 
@@ -45,7 +45,7 @@ describe('public channel', () => {
     const cb = () => {}
     channel.listen('new-messages', cb)
 
-    expect(mockOn).toBeCalledTimes(1)
+    expect(mockOn).toHaveBeenCalledTimes(1)
     expect(mockOn).toHaveBeenCalledWith('foo', 'new-messages', cb)
   })
 
@@ -55,7 +55,7 @@ describe('public channel', () => {
     const cb = () => {}
     channel.stopListening('new-messages', cb)
 
-    expect(mockOff).toBeCalledTimes(1)
+    expect(mockOff).toHaveBeenCalledTimes(1)
     expect(mockOff).toHaveBeenCalledWith('foo', 'new-messages', cb)
   })
 
@@ -65,7 +65,7 @@ describe('public channel', () => {
     const cb = () => {}
     channel.subscribed(cb)
 
-    expect(mockOn).toBeCalledTimes(1)
+    expect(mockOn).toHaveBeenCalledTimes(1)
     expect(mockOn).toHaveBeenCalledWith('foo', 'pollcast:subscription_succeeded', cb)
   })
 
