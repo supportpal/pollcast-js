@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/supportpal/pollcast-js/compare/v1.4.2...v1.4.3) (2024-11-21)
+
+
+### Bug Fixes
+
+* remove universal time ([#503](https://github.com/supportpal/pollcast-js/issues/503)) ([ec3f19f](https://github.com/supportpal/pollcast-js/commit/ec3f19f9e8e334c811ff0a69ae0a069d85e4ed6b))
+
 ## [1.4.2](https://github.com/supportpal/pollcast-js/compare/v1.4.1...v1.4.2) (2024-11-20)
 
 
