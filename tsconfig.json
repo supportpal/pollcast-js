@@ -2,7 +2,7 @@
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "dist/types/",
+    "declarationDir": "dist/",
   },
   "exclude": [
     "**/tests",
