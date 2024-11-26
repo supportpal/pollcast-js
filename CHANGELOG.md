@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/supportpal/pollcast-js/compare/v1.4.3...v1.4.4) (2024-11-26)
+
+
+### Bug Fixes
+
+* **deps:** bump laravel-echo from 1.15.3 to 1.17.1 ([#522](https://github.com/supportpal/pollcast-js/issues/522)) ([5088ba0](https://github.com/supportpal/pollcast-js/commit/5088ba0405073aef251c70701543a0d628ed4b29))
+
 ## [1.4.3](https://github.com/supportpal/pollcast-js/compare/v1.4.2...v1.4.3) (2024-11-21)
 
 
