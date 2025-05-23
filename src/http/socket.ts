@@ -1,6 +1,7 @@
 import { Request } from './request'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
+import {LocalStorage} from "../util/local-storage";
 import {RequestGroup} from "./request-group";
 
 export class Socket {
@@ -39,6 +40,8 @@ export class Socket {
    */
   private channels: { [name: string]: { [event: string]: Function[] } } = {}
 
+  private storage : LocalStorage = new LocalStorage('socket')
+
   constructor (options: any, csrfToken: string | null) {
     this.options = options
     this.options.csrfToken = csrfToken
@@ -58,7 +61,7 @@ export class Socket {
         }
 
         self.lastRequestTime = response.time
-        self.id = response.id
+        self.storage.set('id', self.id = response.id);
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
@@ -193,6 +196,7 @@ export class Socket {
 
   private createRequest (method: string, url: string): Request {
     const request = new Request(method, url)
+    request.setRequestHeader('X-Socket-ID', this.storage.get().id || null)
     request.setWithCredentials(this.options.withCredentials || false)
 
     return request
