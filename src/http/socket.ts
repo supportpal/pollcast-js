@@ -196,8 +196,10 @@ export class Socket {
 
   private createRequest (method: string, url: string): Request {
     const request = new Request(method, url)
-    request.setRequestHeader('X-Socket-ID', this.storage.get().id || null)
     request.setWithCredentials(this.options.withCredentials || false)
+    if (this.storage.get().id) {
+      request.setRequestHeader('X-Socket-ID', this.storage.get().id)
+    }
 
     return request
   }
