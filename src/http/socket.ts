@@ -60,7 +60,7 @@ export class Socket {
           return
         }
 
-        const id = response.id || xhr.getResponseHeader('X-Socket-ID');
+        const id = response.id;
         if (id) {
           self.storage.set('id', self.id = id);
         }
@@ -199,11 +199,19 @@ export class Socket {
   }
 
   private createRequest (method: string, url: string): Request {
+    const self = this;
     const request = new Request(method, url)
     request.setWithCredentials(this.options.withCredentials || false)
     if (this.storage.get().id) {
       request.setRequestHeader('X-Socket-ID', this.storage.get().id)
     }
+
+    request.success(function (xhr: XMLHttpRequest) {
+      const id = xhr.getResponseHeader('X-Socket-ID');
+      if (id) {
+        self.storage.set('id', self.id = id);
+      }
+    });
 
     return request
   }
