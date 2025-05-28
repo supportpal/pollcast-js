@@ -60,8 +60,12 @@ export class Socket {
           return
         }
 
+        const id = xhr.getResponseHeader('X-Socket-ID');
+        if (id) {
+          self.storage.set('id', self.id = id);
+        }
+
         self.lastRequestTime = response.time
-        self.storage.set('id', self.id = response.id);
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
