@@ -60,7 +60,7 @@ export class Socket {
           return
         }
 
-        const id = xhr.getResponseHeader('X-Socket-ID');
+        const id = response.id || xhr.getResponseHeader('X-Socket-ID');
         if (id) {
           self.storage.set('id', self.id = id);
         }
