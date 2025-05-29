@@ -1,6 +1,7 @@
 import { Request } from './request'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
+import {RequestGroup} from "./request-group";
 
 export class Socket {
   /**
@@ -29,6 +30,11 @@ export class Socket {
   private request: Request | undefined
 
   /**
+   * Request queue to prevent XHR requests before successfully connected to the server.
+   */
+  private requestQueue: Request[] = [];
+
+  /**
    * Subscribed channels.
    */
   private channels: { [name: string]: { [event: string]: Function[] } } = {}
@@ -53,9 +59,12 @@ export class Socket {
 
         self.lastRequestTime = response.time
         self.id = response.id
-        self.poll()
+
+        const group = new RequestGroup(self.requestQueue);
+        group.then(() => self.poll());
       })
-      .send({ _token: this.options.csrfToken })
+      .data({ _token: this.options.csrfToken })
+      .send()
   }
 
   get subscribed () {
@@ -67,18 +76,24 @@ export class Socket {
    */
   subscribe (channel: string): void {
     if (!Object.hasOwnProperty.call(this.channels, channel)) {
-      this.channels[channel] = {}
+      this.channels[channel] = {};
     }
 
-    const request = this.createRequest('POST', this.options.routes.subscribe)
+    const request = this.createRequest('POST', this.options.routes.subscribe);
     for (const name in this.options?.auth?.headers) {
-      request.setRequestHeader(name, this.options.auth.headers[name])
+      request.setRequestHeader(name, this.options.auth.headers[name]);
     }
-    request
-      .send({
-        channel_name: channel,
-        _token: this.options.csrfToken
-      })
+
+    request.data({
+      channel_name: channel,
+      _token: this.options.csrfToken,
+    })
+
+    if (this.lastRequestTime !== '') {
+      request.send();
+    } else {
+      this.requestQueue.push(request);
+    }
   }
 
   /**
@@ -133,12 +148,18 @@ export class Socket {
   emit (channel: string, event: string, data: any): void {
     const request = this.createRequest('POST', this.options.routes.publish)
     request
-      .send({
+      .data({
         channel_name: channel,
         event,
         data,
         _token: this.options.csrfToken
       })
+
+    if (this.lastRequestTime !== '') {
+      request.send();
+    } else {
+      this.requestQueue.push(request);
+    }
   }
 
   /**
@@ -146,6 +167,7 @@ export class Socket {
    */
   disconnect (): void {
     this.id = ''
+    this.requestQueue = [];
     if (this.request) {
       this.request.abort()
     }
@@ -211,11 +233,12 @@ export class Socket {
           self.timer = setTimeout(() => self.poll(), self.options.polling)
         }
       })
-      .send({
+      .data({
         time: this.lastRequestTime,
         channels,
         _token: this.options.csrfToken
       })
+      .send()
   }
 
   private fireEvents (response: any): void {
