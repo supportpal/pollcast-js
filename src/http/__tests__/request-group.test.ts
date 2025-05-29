@@ -75,6 +75,19 @@ describe('RequestGroup', () => {
     addEventListener.mock.calls.forEach(([, callback]) => callback());
   });
 
+  it('executes default error callback if any request fails', (done) => {
+    xhr.status = 500;
+
+    const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
+    const group = new RequestGroup(requests);
+
+    group.then(() => {});
+
+    addEventListener.mock.calls.forEach(([, callback]) => callback());
+
+    done();
+  });
+
   it('sends all requests in the group', () => {
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);

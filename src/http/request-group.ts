@@ -24,10 +24,7 @@ export class RequestGroup {
       .catch((error) => errorCallback(error));
 
     while (this.requests.length > 0) {
-      const request = this.requests.shift();
-      if (request) {
-        request.send();
-      }
+      this.requests.shift()?.send();
     }
   }
 }
