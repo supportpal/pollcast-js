@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/supportpal/pollcast-js/compare/v1.4.4...v1.4.5) (2025-05-29)
+
+
+### Bug Fixes
+
+* subscribe sometimes runs before successful connection ([#581](https://github.com/supportpal/pollcast-js/issues/581)) ([49b229e](https://github.com/supportpal/pollcast-js/commit/49b229ed75560dc619c5e9405e0aa715c8df7962))
+
 ## [1.4.4](https://github.com/supportpal/pollcast-js/compare/v1.4.3...v1.4.4) (2024-11-26)
 
 

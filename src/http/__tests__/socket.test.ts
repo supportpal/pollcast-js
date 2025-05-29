@@ -1,11 +1,19 @@
 import { Socket } from '../socket'
 import { Request } from '../request'
 import WindowVisibility from '../../util/window-visibility'
+import {RequestGroup} from "../request-group";
 
 const request = jest.mocked(Request)
 jest.mock('../request', () => {
   return {
     Request: jest.fn()
+  }
+})
+
+const requestGroup = jest.mocked(RequestGroup)
+jest.mock('../request-group', () => {
+  return {
+    RequestGroup: jest.fn()
   }
 })
 
@@ -29,7 +37,14 @@ describe('connect', () => {
   })
 
   it('sends request', () => {
-    const mockSend = jest.fn()
+    const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request.mockImplementation(() : any => {
       return {
         success: jest.fn(function (this: Request, cb) {
@@ -39,6 +54,7 @@ describe('connect', () => {
           return this
         }),
         setWithCredentials: jest.fn(),
+        data: mockData,
         send: mockSend
       }
     })
@@ -48,10 +64,18 @@ describe('connect', () => {
     socket.connect()
 
     expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockSend).toHaveBeenCalledWith({ _token: token })
+    expect(mockData).toHaveBeenCalledWith({ _token: token })
+    expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
   it('runs success callback', () => {
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request.mockImplementation(() : any => {
       return {
         success: jest.fn(function (this: Request, cb) {
@@ -61,6 +85,7 @@ describe('connect', () => {
           return this
         }),
         setWithCredentials: jest.fn(),
+        data: jest.fn().mockReturnThis(),
         send: jest.fn()
       }
     })
@@ -82,6 +107,7 @@ describe('connect', () => {
 
           return this
         }),
+        data: jest.fn().mockReturnThis(),
         setWithCredentials: jest.fn(),
         send: jest.fn()
       }
@@ -100,6 +126,14 @@ describe('poll', () => {
   it('skips if no channels', () => {
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
+
     request
       // connect implementation
       .mockImplementationOnce(() : any => {
@@ -111,6 +145,7 @@ describe('poll', () => {
             return this
           }),
           setWithCredentials: jest.fn(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -119,6 +154,7 @@ describe('poll', () => {
         return {
           success: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -132,6 +168,13 @@ describe('poll', () => {
 
   it('resubscribes on 404', () => {
     const mockSend = jest.fn()
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -143,6 +186,7 @@ describe('poll', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -158,12 +202,13 @@ describe('poll', () => {
             return this
           }),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
     // subscribe implementation
       .mockImplementationOnce(() : any => {
-        return { setWithCredentials: jest.fn(), send: mockSend }
+        return { setWithCredentials: jest.fn(), data: jest.fn().mockReturnThis(), send: mockSend }
       })
 
     const token = 'foo'; const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
@@ -183,6 +228,13 @@ describe('poll', () => {
   })
 
   it('poll fail callback does nothing if not http status code 404', () => {
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -194,6 +246,7 @@ describe('poll', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -209,6 +262,7 @@ describe('poll', () => {
             return this
           }),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -228,6 +282,14 @@ describe('poll', () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
+
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -239,6 +301,7 @@ describe('poll', () => {
             return this
           }),
           setWithCredentials: jest.fn(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -253,6 +316,7 @@ describe('poll', () => {
             return this
           }),
           setWithCredentials: jest.fn(),
+          data: jest.fn().mockReturnThis(),
           send: mockSend
         }
       })
@@ -273,6 +337,13 @@ describe('poll', () => {
   })
 
   it('fires events', (done) => {
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -284,6 +355,7 @@ describe('poll', () => {
             return this
           }),
           setWithCredentials: jest.fn(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -299,6 +371,7 @@ describe('poll', () => {
           setWithCredentials: jest.fn(),
           fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -316,6 +389,13 @@ describe('poll', () => {
   })
 
   it('skips unknown events', () => {
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -327,6 +407,7 @@ describe('poll', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -341,6 +422,7 @@ describe('poll', () => {
           }),
           setWithCredentials: jest.fn(),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -352,6 +434,13 @@ describe('poll', () => {
 
   it('skips unexpected responses', () => {
     const mockSend = jest.fn()
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -363,6 +452,7 @@ describe('poll', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -378,6 +468,7 @@ describe('poll', () => {
           }),
           fail: jest.fn().mockReturnThis(),
           always: jest.fn().mockReturnThis(),
+          data: jest.fn().mockReturnThis(),
           send: mockSend
         }
       })
@@ -400,7 +491,7 @@ describe('poll', () => {
 
 describe('subscribe', () => {
   it('sends request', () => {
-    const mockSend = jest.fn()
+    const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     const mockSetRequestHeader = jest.fn()
     request.mockImplementation(() : any => {
       return {
@@ -411,6 +502,7 @@ describe('subscribe', () => {
 
           return this
         }),
+        data: mockData,
         setRequestHeader: mockSetRequestHeader,
         send: mockSend
       }
@@ -422,7 +514,8 @@ describe('subscribe', () => {
 
     expect(request).toHaveBeenCalledWith('POST', route)
     expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Token', 'foo')
-    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(socket.requestQueue.length).toBe(1)
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
 
@@ -431,6 +524,7 @@ describe('subscribe', () => {
     request.mockImplementation(() : any => {
       return {
         setWithCredentials: jest.fn(),
+        data: jest.fn().mockReturnThis(),
         success: jest.fn(function (this: Request, cb) {
           const xhr = { responseText: '{}' }
           cb(xhr)
@@ -589,10 +683,10 @@ describe('off', () => {
 })
 
 describe('emit', () => {
-  it('sends request', () => {
-    const mockSend = jest.fn()
+  it('queues request', () => {
+    const mockSend = jest.fn(), mockData = jest.fn()
     request.mockImplementation(() : any => {
-      return { setWithCredentials: jest.fn(), send: mockSend }
+      return { setWithCredentials: jest.fn(), data: mockData, send: mockSend }
     })
 
     const token = 'foo'; const route = '/publish'
@@ -600,7 +694,24 @@ describe('emit', () => {
     socket.emit('channel1', 'typing', {})
 
     expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockSend).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    expect(socket.requestQueue.length).toBe(1)
+  })
+
+  it('sends request immediately', () => {
+    const mockSend = jest.fn(), mockData = jest.fn()
+    request.mockImplementation(() : any => {
+      return { setWithCredentials: jest.fn(), data: mockData, send: mockSend }
+    })
+
+    const token = 'foo'; const route = '/publish'
+    const socket = new Socket({ routes: { publish: route } }, token)
+    socket.lastRequestTime = '123';
+    socket.emit('channel1', 'typing', {})
+
+    expect(request).toHaveBeenCalledWith('POST', route)
+    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    expect(mockSend).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -690,6 +801,14 @@ describe('disconnect', () => {
     const token = 'foo'; const route = '/connect'
     const socket = new Socket({ routes: { connect: route } }, token)
 
+    requestGroup.mockImplementationOnce(() : any => {
+      return {
+        then: jest.fn(function (this: RequestGroup, cb) {
+          cb();
+        })
+      }
+    })
+
     request
     // connect implementation
       .mockImplementationOnce(() : any => {
@@ -702,6 +821,7 @@ describe('disconnect', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: jest.fn()
         }
       })
@@ -718,6 +838,7 @@ describe('disconnect', () => {
 
             return this
           }),
+          data: jest.fn().mockReturnThis(),
           send: mockSend
         }
       })

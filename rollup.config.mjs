@@ -1,7 +1,7 @@
 import {nodeResolve} from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import {babel} from "@rollup/plugin-babel";
-import packageJson from './package.json' assert { type: "json" };
+import packageJson from './package.json' with { type: "json" };
 
 const version = process.env.VERSION || packageJson.version
 
