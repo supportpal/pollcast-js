@@ -3,7 +3,7 @@
 exports[`connector can join new channel 1`] = `
 {
   "foo": Channel {
-    "eventFormatter": EventFormatter {
+    "eventFormatter": u {
       "namespace": "App.Events",
     },
     "name": "foo",
@@ -13,7 +13,7 @@ exports[`connector can join new channel 1`] = `
       },
       "authEndpoint": "/broadcasting/auth",
       "bearerToken": null,
-      "broadcaster": "pusher",
+      "broadcaster": undefined,
       "csrfToken": null,
       "host": null,
       "key": null,
@@ -66,7 +66,7 @@ exports[`connector can join new channel 1`] = `
 exports[`connector can join presence channel 1`] = `
 {
   "presence-foo": PresenceChannel {
-    "eventFormatter": EventFormatter {
+    "eventFormatter": u {
       "namespace": "App.Events",
     },
     "name": "presence-foo",
@@ -76,7 +76,7 @@ exports[`connector can join presence channel 1`] = `
       },
       "authEndpoint": "/broadcasting/auth",
       "bearerToken": null,
-      "broadcaster": "pusher",
+      "broadcaster": undefined,
       "csrfToken": null,
       "host": null,
       "key": null,
@@ -129,7 +129,7 @@ exports[`connector can join presence channel 1`] = `
 exports[`connector can join private channel 1`] = `
 {
   "private-foo": PrivateChannel {
-    "eventFormatter": EventFormatter {
+    "eventFormatter": u {
       "namespace": "App.Events",
     },
     "name": "private-foo",
@@ -139,7 +139,7 @@ exports[`connector can join private channel 1`] = `
       },
       "authEndpoint": "/broadcasting/auth",
       "bearerToken": null,
-      "broadcaster": "pusher",
+      "broadcaster": undefined,
       "csrfToken": null,
       "host": null,
       "key": null,
