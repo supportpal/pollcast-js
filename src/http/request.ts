@@ -2,6 +2,7 @@ import { urlEncodeObject } from '../util/helpers'
 
 export class Request {
   private xhr: XMLHttpRequest
+  private body: object = {};
 
   constructor (method: string, url: string) {
     this.xhr = new window.XMLHttpRequest()
@@ -57,13 +58,14 @@ export class Request {
     return this
   }
 
-  send (data?: object): void {
-    let encodedData
-    if (typeof data !== 'undefined') {
-      encodedData = urlEncodeObject(data)
-    }
+  data (data: object): Request {
+    this.body = data;
 
-    this.xhr.send(encodedData || null)
+    return this;
+  }
+
+  send (): void {
+    this.xhr.send(urlEncodeObject(this.body))
   }
 
   abort () : void {
