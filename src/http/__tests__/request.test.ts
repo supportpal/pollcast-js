@@ -82,9 +82,7 @@ describe('failed requests', () => {
 
 describe('successful requests', () => {
   it('opens xhr and sets headers', () => {
-     
     new Request('GET', 'some/url')
-     
 
     expect(open).toHaveBeenCalledWith('GET', 'some/url')
     expect(setRequestHeader.mock.calls.length).toBe(2)
@@ -117,12 +115,12 @@ describe('successful requests', () => {
     const request = new Request('GET', 'some/url')
     request.send()
 
-    expect(send).toHaveBeenCalledWith(null)
+    expect(send).toHaveBeenCalledWith('')
   })
 
   it('sends request with data', () => {
     const request = new Request('GET', 'some/url')
-    request.send({ foo: 'bar' })
+    request.data({ foo: 'bar' }).send()
 
     expect(send).toHaveBeenCalledWith('foo=bar')
   })
