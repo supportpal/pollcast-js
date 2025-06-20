@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/supportpal/pollcast-js/compare/v1.4.6...v2.0.0) (2025-06-20)
+
+
+### chore
+
+* add laravel-echo to peer dependencies ([45b51b1](https://github.com/supportpal/pollcast-js/commit/45b51b17ee09aca71fd0e237f6f60d9029e4f62c))
+
+
+### BREAKING CHANGES
+
+* laravel-echo@2 must now be installed separately alongside this package
+
 ## [1.4.6](https://github.com/supportpal/pollcast-js/compare/v1.4.5...v1.4.6) (2025-05-29)
 
 
