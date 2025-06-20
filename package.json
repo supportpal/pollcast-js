@@ -23,7 +23,7 @@
   },
   "author": "Kieran brahney",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "laravel-echo": "^2.1.4"
   },
   "devDependencies": {
