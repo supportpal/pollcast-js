@@ -1,6 +1,6 @@
 {
   "name": "@supportpal/pollcast",
-  "version": "1.4.6",
+  "version": "2.0.0",
   "description": "",
   "repository": {
     "url": "https://github.com/supportpal/pollcast-js"
@@ -23,8 +23,8 @@
   },
   "author": "Kieran brahney",
   "license": "MIT",
-  "dependencies": {
-    "laravel-echo": "^2.1.4"
+  "peerDependencies": {
+    "laravel-echo": "^2.1.6"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
