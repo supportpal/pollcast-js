@@ -42,9 +42,8 @@ export class Socket {
 
   private storage : LocalStorage = new LocalStorage('socket')
 
-  constructor (options: any, csrfToken: string | null) {
+  constructor (options: any) {
     this.options = options
-    this.options.csrfToken = csrfToken
   }
 
   /**
@@ -70,7 +69,6 @@ export class Socket {
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
       })
-      .data({ _token: this.options.csrfToken })
       .send()
   }
 
@@ -93,7 +91,6 @@ export class Socket {
 
     request.data({
       channel_name: channel,
-      _token: this.options.csrfToken,
     })
 
     if (this.lastRequestTime !== '') {
@@ -109,7 +106,6 @@ export class Socket {
   unsubscribe (channel: string): void {
     const data = {
       channel_name: channel,
-      _token: this.options.csrfToken
     }
 
     if ('sendBeacon' in navigator && navigator.sendBeacon(this.options.routes.unsubscribe, new URLSearchParams(data))) {
@@ -159,7 +155,6 @@ export class Socket {
         channel_name: channel,
         event,
         data,
-        _token: this.options.csrfToken
       })
 
     if (this.lastRequestTime !== '') {
@@ -254,7 +249,6 @@ export class Socket {
       .data({
         time: this.lastRequestTime,
         channels,
-        _token: this.options.csrfToken
       })
       .send()
   }
