@@ -59,11 +59,6 @@ export class Socket {
           return
         }
 
-        const id = response.id;
-        if (id) {
-          self.storage.set('id', self.id = id);
-        }
-
         self.lastRequestTime = response.time
 
         const group = new RequestGroup(self.requestQueue);
