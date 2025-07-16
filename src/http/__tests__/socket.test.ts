@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe('constructor', () => {
   it('initialises', () => {
-    expect(new Socket({}, 'foo')).toBeInstanceOf(Socket)
+    expect(new Socket({})).toBeInstanceOf(Socket)
   })
 })
 
@@ -63,8 +63,8 @@ describe('connect', () => {
       }
     })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
     expect(socket.id).toEqual('1')
@@ -96,12 +96,11 @@ describe('connect', () => {
       }
     })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
     expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockData).toHaveBeenCalledWith({ _token: token })
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
@@ -130,8 +129,8 @@ describe('connect', () => {
       }
     })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
     expect(socket.id).toEqual('1')
@@ -153,8 +152,8 @@ describe('connect', () => {
       }
     })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
     expect(pollSpy).toHaveBeenCalledTimes(0)
@@ -199,8 +198,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
     expect(timeoutSpy).toHaveBeenCalledTimes(1)
@@ -261,8 +260,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
-    const socket = new Socket({ routes: { connect: connectRoute, subscribe: subscribeRoute } }, token)
+    const connectRoute = '/connect'; const subscribeRoute = '/subscribe'
+    const socket = new Socket({ routes: { connect: connectRoute, subscribe: subscribeRoute } })
 
     WindowVisibility.setActive()
     const cb = () => {}
@@ -319,7 +318,7 @@ describe('poll', () => {
         }
       })
 
-    const socket = new Socket({ routes: { connect: '/connect' } }, 'foo')
+    const socket = new Socket({ routes: { connect: '/connect' } })
 
     WindowVisibility.setActive()
     Object.defineProperty(socket, 'channels', {
@@ -374,8 +373,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
 
     WindowVisibility.setActive()
     Object.defineProperty(socket, 'channels', {
@@ -434,8 +433,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
 
     const cb = () => { done() }
     Object.defineProperty(socket, 'channels', {
@@ -485,8 +484,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.connect()
   })
 
@@ -533,8 +532,8 @@ describe('poll', () => {
         }
       })
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
     socket.dispatch = jest.fn()
 
     Object.defineProperty(socket, 'channels', {
@@ -568,13 +567,13 @@ describe('subscribe', () => {
       }
     })
 
-    const token = 'foo'; const route = '/subscribe'; const channel = 'channel1'
-    const socket = new Socket({ routes: { subscribe: route }, auth: { headers: { 'X-Token': 'foo' } } }, token)
+    const route = '/subscribe'; const channel = 'channel1'
+    const socket = new Socket({ routes: { subscribe: route }, auth: { headers: { 'X-Token': 'foo' } } })
     socket.subscribe(channel)
 
     expect(request).toHaveBeenCalledWith('POST', route)
     expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Token', 'foo')
-    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: channel })
+    expect(mockData).toHaveBeenCalledWith({ channel_name: channel })
     expect(socket.requestQueue.length).toBe(1)
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
@@ -596,7 +595,7 @@ describe('subscribe', () => {
     })
 
     const channel = 'channel1'
-    const socket = new Socket({ routes: { subscribe: '/subscribe' } }, 'foo')
+    const socket = new Socket({ routes: { subscribe: '/subscribe' } })
 
     const cb = () => {}
     Object.defineProperty(socket, 'channels', {
@@ -619,12 +618,12 @@ describe('Unsubscribe', () => {
       value: sendBeacon
     })
 
-    const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
+    const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
 
-    const socket = new Socket({ routes: { unsubscribe: route } }, token)
+    const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
 
     expect(socket.subscribed).toEqual(channels)
@@ -641,12 +640,12 @@ describe('Unsubscribe', () => {
       value: sendBeacon
     })
 
-    const token = 'foo'; const route = '/unsubscribe'; const channel = 'channel1'
+    const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
 
-    const socket = new Socket({ routes: { unsubscribe: route } }, token)
+    const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
 
     expect(socket.subscribed).toEqual(channels)
@@ -659,7 +658,7 @@ describe('Unsubscribe', () => {
 
 describe('on', () => {
   it('returns when channel doesnt exist', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', { value: {}, writable: true })
 
     socket.on('channel1', 'new_message', () => {})
@@ -668,7 +667,7 @@ describe('on', () => {
   })
 
   it('registers first listener', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', { value: { channel1: {} }, writable: true })
 
     socket.on('channel1', 'new_message', () => {})
@@ -678,7 +677,7 @@ describe('on', () => {
 
   it('appends to existing listeners', () => {
     const cb = () => {}
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', { value: { channel1: { new_message: [cb] } }, writable: true })
 
     socket.on('channel1', 'new_message', () => {})
@@ -689,7 +688,7 @@ describe('on', () => {
 
 describe('off', () => {
   it('returns if channel doesnt exist', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', { value: {}, writable: true })
 
     socket.off('channel1', 'new_message')
@@ -698,7 +697,7 @@ describe('off', () => {
   })
 
   it('returns if event doesnt exist', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', { value: { channel1: {} }, writable: true })
 
     socket.off('channel1', 'new_message')
@@ -707,7 +706,7 @@ describe('off', () => {
   })
 
   it('removes all event listeners', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', {
       value: {
         channel1: {
@@ -723,7 +722,7 @@ describe('off', () => {
   })
 
   it('removes specified event listeners', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
 
     const listener1 = () => {}
     const listener2 = () => {}
@@ -754,12 +753,12 @@ describe('emit', () => {
       }
     })
 
-    const token = 'foo'; const route = '/publish'
-    const socket = new Socket({ routes: { publish: route } }, token)
+    const route = '/publish'
+    const socket = new Socket({ routes: { publish: route } })
     socket.emit('channel1', 'typing', {})
 
     expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    expect(mockData).toHaveBeenCalledWith({ channel_name: 'channel1', data: {}, event: 'typing' })
     expect(socket.requestQueue.length).toBe(1)
   })
 
@@ -778,13 +777,13 @@ describe('emit', () => {
       }
     })
 
-    const token = 'foo'; const route = '/publish'
-    const socket = new Socket({ routes: { publish: route } }, token)
+    const route = '/publish'
+    const socket = new Socket({ routes: { publish: route } })
     socket.lastRequestTime = '123';
     socket.emit('channel1', 'typing', {})
 
     expect(request).toHaveBeenCalledWith('POST', route)
-    expect(mockData).toHaveBeenCalledWith({ _token: token, channel_name: 'channel1', data: {}, event: 'typing' })
+    expect(mockData).toHaveBeenCalledWith({ channel_name: 'channel1', data: {}, event: 'typing' })
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 })
@@ -792,7 +791,7 @@ describe('emit', () => {
 describe('dispatch', () => {
   it('returns when channel doesnt exist', () => {
     const cb = jest.fn()
-    const socket = new Socket({}, '')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', {
       value: { foo: { bar: [cb] } },
       writable: true
@@ -805,7 +804,7 @@ describe('dispatch', () => {
 
   it('returns when event doesnt exist', () => {
     const cb = jest.fn()
-    const socket = new Socket({}, '')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', {
       value: { foo: { bar: [cb] } },
       writable: true
@@ -818,7 +817,7 @@ describe('dispatch', () => {
 
   it('dispatches event', () => {
     const cb = jest.fn()
-    const socket = new Socket({}, '')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'channels', {
       value: { foo: { bar: [cb] } },
       writable: true
@@ -837,7 +836,7 @@ describe('disconnect', () => {
       return { setWithCredentials: jest.fn(), abort: abortMock }
     })
 
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'request', {
       value: new Request('GET', '/'),
       writable: true
@@ -851,7 +850,7 @@ describe('disconnect', () => {
   it('cancels timer', () => {
     jest.spyOn(window, 'clearTimeout')
 
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     Object.defineProperty(socket, 'timer', {
       value: setTimeout(() => {}),
       writable: true
@@ -863,7 +862,7 @@ describe('disconnect', () => {
   })
 
   it('unsets socket id', () => {
-    const socket = new Socket({}, 'foo')
+    const socket = new Socket({})
     socket.disconnect()
     expect(socket.id).toBe('')
   })
@@ -872,8 +871,8 @@ describe('disconnect', () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
-    const token = 'foo'; const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } }, token)
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
 
     requestGroup.mockImplementationOnce(() : any => {
       return {
