@@ -3,7 +3,7 @@ import { urlEncodeObject } from '../util/helpers'
 export class Request {
   private xhr: XMLHttpRequest
   private body: object = {};
-  private beforeXhr: Function = () => {};
+  private beforeXhr: Function[] = [];
 
   constructor (method: string, url: string) {
     this.xhr = new window.XMLHttpRequest()
@@ -66,13 +66,13 @@ export class Request {
   }
 
   beforeSend (cb: Function): Request {
-    this.beforeXhr = cb;
+    this.beforeXhr.push(cb);
 
     return this
   }
 
   send (): void {
-    this.beforeXhr();
+    this.beforeXhr.forEach((cb) => cb());
     this.xhr.send(urlEncodeObject(this.body))
   }
 

@@ -19,6 +19,7 @@
     "lint:fix": "eslint -c eslint.config.mjs --fix",
     "prepare": "npm run build",
     "test": "jest",
+    "coverage": "jest --coverage",
     "bundlewatch": "bundlewatch"
   },
   "author": "Kieran brahney",
