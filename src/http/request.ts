@@ -72,7 +72,7 @@ export class Request {
   }
 
   send (): void {
-    this.beforeXhr.forEach((cb) => cb());
+    this.beforeXhr.forEach((cb) => cb(this.xhr));
     this.xhr.send(urlEncodeObject(this.body))
   }
 

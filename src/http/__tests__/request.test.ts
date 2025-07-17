@@ -178,7 +178,9 @@ describe('successful requests', () => {
     const request = new Request('GET', '/some-url');
     request.beforeSend(callback1).beforeSend(callback2).send();
 
+    expect(callback1).toHaveBeenCalledWith(xhr);
     expect(callback1).toHaveBeenCalledTimes(1);
+    expect(callback2).toHaveBeenCalledWith(xhr)
     expect(callback2).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledTimes(1);
   });
