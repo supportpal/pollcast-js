@@ -1,4 +1,7 @@
 import { Request } from '../request'
+import { toHaveBeenCalledExactlyOnceWith, toHaveBeenCalledBefore } from 'jest-extended';
+
+expect.extend({ toHaveBeenCalledExactlyOnceWith, toHaveBeenCalledBefore });
 
 let open :any,
   setRequestHeader : any,
@@ -178,10 +181,9 @@ describe('successful requests', () => {
     const request = new Request('GET', '/some-url');
     request.beforeSend(callback1).beforeSend(callback2).send();
 
-    expect(callback1).toHaveBeenCalledWith(xhr);
-    expect(callback1).toHaveBeenCalledTimes(1);
-    expect(callback2).toHaveBeenCalledWith(xhr)
-    expect(callback2).toHaveBeenCalledTimes(1);
+    expect(callback1).toHaveBeenCalledExactlyOnceWith(xhr);
+    expect(callback2).toHaveBeenCalledExactlyOnceWith(xhr);
+    expect(callback1).toHaveBeenCalledBefore(callback2);
     expect(send).toHaveBeenCalledTimes(1);
   });
 })
