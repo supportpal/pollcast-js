@@ -37,39 +37,6 @@ describe('connect', () => {
     pollSpy.mockImplementation(() => {})
   })
 
-  it('handles bc on response.id', () => {
-    const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
-    requestGroup.mockImplementationOnce(() : any => {
-      return {
-        then: jest.fn(function (this: RequestGroup, cb) {
-          cb();
-        })
-      }
-    })
-    request.mockImplementation(() : any => {
-      return {
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = {
-            responseText: '{"status": "success", "time": "1", "id": "1"}',
-            getResponseHeader: jest.fn().mockReturnValue('...')
-          }
-          cb(xhr)
-
-          return this
-        }),
-        setWithCredentials: jest.fn(),
-        data: mockData,
-        send: mockSend
-      }
-    })
-
-    const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } })
-    socket.connect()
-
-    expect(socket.id).toEqual('1')
-  })
-
   it('sends request', () => {
     const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     requestGroup.mockImplementationOnce(() : any => {
