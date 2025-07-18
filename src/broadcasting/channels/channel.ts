@@ -56,7 +56,7 @@ export class Channel extends BaseChannel {
   /**
    * Listen for an event on the channel instance.
    */
-  listen (event: string, callback: Function): Channel {
+  listen (event: string, callback: (data: any) => void): this {
     this.socket.on(this.name, this.eventFormatter.format(event), callback)
 
     return this
@@ -65,7 +65,7 @@ export class Channel extends BaseChannel {
   /**
      * Stop listening for an event on the channel instance.
      */
-  stopListening (event: string, callback?: Function): Channel {
+  stopListening (event: string, callback?: (data: any) => void): this {
     this.socket.off(this.name, this.eventFormatter.format(event), callback)
 
     return this
@@ -74,7 +74,7 @@ export class Channel extends BaseChannel {
   /**
    * Register a callback to be called anytime a subscription succeeds.
    */
-  subscribed (callback: Function): Channel {
+  subscribed (callback: (data: any) => void): this {
     this.socket.on(this.name, 'pollcast:subscription_succeeded', callback)
 
     return this
@@ -83,7 +83,8 @@ export class Channel extends BaseChannel {
   /**
    * Register a callback to be called anytime an error occurs.
    */
-  error (callback: Function): Channel {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  error (callback: (data: any) => void): this {
     return this
   }
 }

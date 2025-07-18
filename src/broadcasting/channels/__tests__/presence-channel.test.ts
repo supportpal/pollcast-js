@@ -16,7 +16,7 @@ describe('presence channel', () => {
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:subscription_succeeded', expect.any(Function))
   })
 
-  it('triggers here event callback', (done) => {
+  it('triggers here event callback', async () => {
     const mockSocket = new Socket({}, '')
     mockSocket.subscribe = jest.fn()
     Object.defineProperty(mockSocket, 'channels', {
@@ -25,15 +25,19 @@ describe('presence channel', () => {
     })
 
     const channel = new PresenceChannel(mockSocket, 'foo', {})
-    channel.here((members: any) => {
-      expect(members).toEqual([{ name: 'James' }])
-      done()
+    const membersPromise = new Promise((resolve) => {
+      channel.here((members: any) => {
+        resolve(members);
+      })
     })
 
     mockSocket.dispatch('foo', 'pollcast:subscription_succeeded', [
-      { user_id: 1, user_info: { name: 'James' } }
+      { user_id: 1, user_info: { name: 'James' } },
     ])
-  })
+
+    const members = await membersPromise;
+    expect(members).toEqual([{ name: 'James' }]);
+  });
 
   it('registers joining event listener', () => {
     const mockSocket = new Socket({}, '')
@@ -47,7 +51,7 @@ describe('presence channel', () => {
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:member_added', expect.any(Function))
   })
 
-  it('triggers joining event callback', (done) => {
+  it('triggers joining event callback', async () => {
     const mockSocket = new Socket({}, '')
     mockSocket.subscribe = jest.fn()
     Object.defineProperty(mockSocket, 'channels', {
@@ -56,12 +60,16 @@ describe('presence channel', () => {
     })
 
     const channel = new PresenceChannel(mockSocket, 'foo', {})
-    channel.joining((member: any) => {
-      expect(member).toEqual({ name: 'James' })
-      done()
+    const memberPromise = new Promise((resolve) => {
+      channel.joining((member: any) => {
+        resolve(member)
+      })
     })
 
     mockSocket.dispatch('foo', 'pollcast:member_added', { user_id: 1, user_info: { name: 'James' } })
+
+    const member = await memberPromise
+    expect(member).toEqual({ name: 'James' })
   })
 
   it('registers leaving event listener', () => {
@@ -76,7 +84,7 @@ describe('presence channel', () => {
     expect(mockSocket.on).toHaveBeenCalledWith('foo', 'pollcast:member_removed', expect.any(Function))
   })
 
-  it('triggers leaving event callback', (done) => {
+  it('triggers leaving event callback', async () => {
     const mockSocket = new Socket({}, '')
     mockSocket.subscribe = jest.fn()
     Object.defineProperty(mockSocket, 'channels', {
@@ -85,11 +93,15 @@ describe('presence channel', () => {
     })
 
     const channel = new PresenceChannel(mockSocket, 'foo', {})
-    channel.leaving((member: any) => {
-      expect(member).toEqual({ name: 'James' })
-      done()
+    const memberPromise = new Promise((resolve) => {
+      channel.leaving((member: any) => {
+        resolve(member)
+      })
     })
 
     mockSocket.dispatch('foo', 'pollcast:member_removed', { user_id: 1, user_info: { name: 'James' } })
+
+    const member = await memberPromise
+    expect(member).toEqual({ name: 'James' })
   })
 })

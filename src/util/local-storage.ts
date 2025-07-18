@@ -18,7 +18,7 @@ export class LocalStorage {
       }
 
       return {}
-    } catch (err) {
+    } catch (_err) {
       return {}
     }
   }

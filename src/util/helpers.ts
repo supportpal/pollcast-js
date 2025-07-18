@@ -18,7 +18,7 @@ const urlEncode = function (key: string, value: string): string {
 const urlEncodeObject = function (obj: any, prefix?: string): string {
   const str : string[] = []
 
-  Object.keys(obj).forEach((key, index) => {
+  Object.keys(obj).forEach((key) => {
     let item
     const k = prefix ? prefix + '[' + key + ']' : key
     const v = obj[key]

@@ -68,19 +68,22 @@ describe('failed requests', () => {
     expect(cb).toHaveBeenCalledWith(xhr)
   })
 
-  it('dispatches event on request failure', (done) => {
-    document.addEventListener('pollcast:request-error', function (e) {
-      // @ts-expect-error ???
-      expect(e.detail).toBe(xhr)
-      done()
-    })
+  it('dispatches event on request failure', async () => {
+    const eventPromise = new Promise<CustomEvent>((resolve) => {
+      document.addEventListener('pollcast:request-error', (e) => {
+        resolve(e as CustomEvent);
+      });
+    });
 
-    const request = new Request('GET', 'some/url')
-    request.send()
+    const request = new Request('GET', 'some/url');
+    request.send();
 
-    expect(addEventListener.mock.calls.length).toBe(1)
-    addEventListener.mock.calls[0][1]()
-  })
+    expect(addEventListener.mock.calls.length).toBe(1);
+    addEventListener.mock.calls[0][1]();
+
+    const event = await eventPromise;
+    expect(event.detail).toBe(xhr);
+  });
 })
 
 describe('successful requests', () => {
@@ -142,17 +145,17 @@ describe('successful requests', () => {
     expect(cb).toHaveBeenCalledWith(xhr)
   })
 
-  it('runs always callback', (done) => {
-    const request = new Request('GET', 'some/url')
-    request
-      .always(function () {
-        done()
-      })
-      .send()
+  it('runs always callback', async () => {
+    const request = new Request('GET', 'some/url');
+    const alwaysCallback = jest.fn();
 
-    expect(addEventListener.mock.calls.length).toBe(2)
-    addEventListener.mock.calls[1][1]()
-  })
+    request.always(alwaysCallback).send();
+
+    expect(addEventListener.mock.calls.length).toBe(2);
+    addEventListener.mock.calls[1][1]();
+
+    expect(alwaysCallback).toHaveBeenCalledTimes(1);
+  });
 
   it('can abort request', () => {
     const request = new Request('GET', 'some/url')

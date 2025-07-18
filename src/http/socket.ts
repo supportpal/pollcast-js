@@ -38,7 +38,7 @@ export class Socket {
   /**
    * Subscribed channels.
    */
-  private channels: { [name: string]: { [event: string]: Function[] } } = {}
+  private channels: { [name: string]: { [event: string]: ((data: any) => void)[] } } = {}
 
   private storage : LocalStorage = new LocalStorage('socket')
 
@@ -111,7 +111,7 @@ export class Socket {
   /**
    * Listen for an event on the channel.
    */
-  on (channel: string, event: string, callback: Function): void {
+  on (channel: string, event: string, callback: (data: any) => void): void {
     if (!Object.hasOwnProperty.call(this.channels, channel)) {
       return
     }
@@ -126,7 +126,7 @@ export class Socket {
   /**
    * Stop listening for a given event on the channel.
    */
-  off (channel: string, event: string, callback?: Function): void {
+  off (channel: string, event: string, callback?: (data: any) => void): void {
     if (!Object.hasOwnProperty.call(this.channels, channel) ||
             !Object.hasOwnProperty.call(this.channels[channel], event)
     ) {
@@ -134,7 +134,7 @@ export class Socket {
     }
 
     if (callback) {
-      this.channels[channel][event] = this.channels[channel][event].filter((cb: Function) => cb !== callback)
+      this.channels[channel][event] = this.channels[channel][event].filter((cb: (data: any) => void) => cb !== callback)
     } else {
       delete this.channels[channel][event]
     }

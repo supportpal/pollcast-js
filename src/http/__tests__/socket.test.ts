@@ -17,13 +17,19 @@ const createMockRequest = (overrides: Partial<Request> = {}): jest.Mocked<Reques
     success: jest.fn().mockReturnThis(),
     fail: jest.fn().mockReturnThis(),
     always: jest.fn().mockReturnThis(),
-    setWithCredentials: jest.fn(),
-    setRequestHeader: jest.fn(),
+    setWithCredentials: jest.fn().mockReturnThis(),
+    setRequestHeader: jest.fn().mockReturnThis(),
     data: jest.fn().mockReturnThis(),
     send: jest.fn(),
     abort: jest.fn(),
     ...overrides,
   } as unknown as jest.Mocked<Request>;
+};
+
+const createXhr = (overrides: Partial<XMLHttpRequest> = {}): jest.Mocked<XMLHttpRequest> => {
+  return {
+    ...overrides,
+  } as unknown as jest.Mocked<XMLHttpRequest>;
 };
 
 const requestGroup = jest.mocked(RequestGroup)
@@ -64,12 +70,12 @@ describe('connect', () => {
     const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
-      beforeSend: jest.fn((cb)=> cb()),
+      beforeSend: jest.fn(function (this: Request, cb) { cb(createXhr()); return this; }),
       success: jest.fn(function (this: Request, cb) {
-        cb({
+        cb(createXhr({
           responseText: '{"status": "success", "time": "1", "id": null}',
           getResponseHeader: jest.fn().mockReturnValue('1'),
-        });
+        }));
         return this;
       }),
       data: mockData,
@@ -89,10 +95,10 @@ describe('connect', () => {
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = {
+        const xhr = createXhr({
           responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": null}',
           getResponseHeader: jest.fn().mockReturnValue(socketId)
-        }
+        })
         cb(xhr)
 
         return this
@@ -110,7 +116,7 @@ describe('connect', () => {
   it('exits when returns unexpected response', () => {
     request.mockImplementation(() => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = { responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('') }
+        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('') })
         cb(xhr)
 
         return this
@@ -131,15 +137,15 @@ describe('connect', () => {
     request.mockImplementation(() => createMockRequest({
       beforeSend: jest.fn(function (this: Request, cb) {
         (new LocalStorage('socket')).set('id', socketId);
-        cb({setRequestHeader: mockSetRequestHeader});
+        cb(createXhr({setRequestHeader: mockSetRequestHeader}));
 
         return this;
       }),
       success: jest.fn(function (this: Request, cb) {
-        const xhr = {
+        const xhr = createXhr({
           responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": null}',
           getResponseHeader: jest.fn().mockReturnValue(socketId)
-        }
+        })
         cb(xhr)
 
         return this
@@ -164,7 +170,7 @@ describe('poll', () => {
       // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -187,7 +193,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -196,7 +202,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
-          const xhr = { status: 404, responseText: '{"message": "Not Found"}' }
+          const xhr = createXhr({ status: 404, responseText: '{"message": "Not Found"}' })
           cb(xhr)
 
           return this
@@ -205,7 +211,7 @@ describe('poll', () => {
     // subscribe implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { getResponseHeader: jest.fn().mockReturnValue('3') }
+          const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('3') })
           cb(xhr)
 
           return this
@@ -236,7 +242,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -245,7 +251,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
-          const xhr = { status: 400 }
+          const xhr = createXhr({ status: 400 })
           cb(xhr)
 
           return this
@@ -273,7 +279,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -304,43 +310,50 @@ describe('poll', () => {
     expect(timeoutSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('fires events', (done) => {
+  it('fires events', async () => {
     WindowVisibility.setActive();
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request
-    // connect implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
-          cb(xhr)
+      // connect implementation
+      .mockImplementationOnce((): any =>
+        createMockRequest({
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') });
+            cb(xhr);
 
-          return this
+            return this;
+          }),
         })
-      }))
+      )
       // poll implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = {
-            responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}',
-            getResponseHeader: jest.fn().mockReturnValue('2')
-          }
-          cb(xhr)
+      .mockImplementationOnce((): any =>
+        createMockRequest({
+          success: jest.fn(function (this: Request, cb) {
+            const xhr = createXhr({
+              responseText:
+                '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}',
+              getResponseHeader: jest.fn().mockReturnValue('2'),
+            });
+            cb(xhr);
 
-          return this
+            return this;
+          }),
         })
-      }))
+      );
 
-    const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } })
+    const route = '/connect';
+    const socket = new Socket({ routes: { connect: route } });
 
-    const cb = () => { done() }
+    const cb = jest.fn();
     Object.defineProperty(socket, 'channels', {
       value: { channel1: { new_message: [cb] } },
-      writable: true
-    })
+      writable: true,
+    });
 
-    socket.connect()
-  })
+    socket.connect();
+
+    expect(cb).toHaveBeenCalled();
+  });
 
   it('skips unknown events', () => {
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
@@ -348,7 +361,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -357,7 +370,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}' }
+          const xhr = createXhr({ responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}' })
           cb(xhr)
 
           return this
@@ -377,7 +390,7 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
           cb(xhr)
 
           return this
@@ -386,7 +399,7 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '"foo"', getResponseHeader: jest.fn().mockReturnValue('2') }
+          const xhr = createXhr({ responseText: '"foo"', getResponseHeader: jest.fn().mockReturnValue('2') })
           cb(xhr)
 
           return this
@@ -416,7 +429,7 @@ describe('subscribe', () => {
     const mockSetRequestHeader = jest.fn()
     request.mockImplementation(() : any => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = { responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') }
+        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') })
         cb(xhr)
 
         return this
@@ -441,7 +454,7 @@ describe('subscribe', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = { responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') }
+        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') })
         cb(xhr)
 
         return this
@@ -467,7 +480,7 @@ describe('subscribe', () => {
 
 describe('Unsubscribe', () => {
   it('sends request', () => {
-    const sendBeacon = jest.fn().mockImplementation((route, data) => true)
+    const sendBeacon = jest.fn().mockImplementation(() => true)
     Object.defineProperty(window.navigator, 'sendBeacon', {
       writable: true,
       value: sendBeacon
@@ -489,7 +502,7 @@ describe('Unsubscribe', () => {
   })
 
   it('send request fails', () => {
-    const sendBeacon = jest.fn().mockImplementation((route, data) => false)
+    const sendBeacon = jest.fn().mockImplementation(() => false)
     Object.defineProperty(window.navigator, 'sendBeacon', {
       writable: true,
       value: sendBeacon
@@ -619,7 +632,7 @@ describe('emit', () => {
       data: mockData,
       send: mockSend,
       success: jest.fn(function (this: Request, cb) {
-        const xhr = { getResponseHeader: jest.fn().mockReturnValue('1') }
+        const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('1') })
         cb(xhr)
 
         return this;
@@ -729,7 +742,7 @@ describe('disconnect', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = { responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('...') }
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('...') })
           cb(xhr)
 
           return this
