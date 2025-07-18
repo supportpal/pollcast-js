@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/supportpal/pollcast-js/compare/v2.0.0...v2.1.0) (2025-07-18)
+
+
+### Features
+
+* add x-socket-id header ([#580](https://github.com/supportpal/pollcast-js/issues/580)) ([b521753](https://github.com/supportpal/pollcast-js/commit/b52175313aae85ee1c353b952fd2b9a74fa68733))
+
 # [2.0.0](https://github.com/supportpal/pollcast-js/compare/v1.4.6...v2.0.0) (2025-06-20)
 
 
