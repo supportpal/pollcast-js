@@ -1,6 +1,7 @@
 import { Request } from './request'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
+import {LocalStorage} from "../util/local-storage";
 import {RequestGroup} from "./request-group";
 
 export class Socket {
@@ -39,9 +40,10 @@ export class Socket {
    */
   private channels: { [name: string]: { [event: string]: Function[] } } = {}
 
-  constructor (options: any, csrfToken: string | null) {
+  private storage : LocalStorage = new LocalStorage('socket')
+
+  constructor (options: any) {
     this.options = options
-    this.options.csrfToken = csrfToken
   }
 
   /**
@@ -58,12 +60,10 @@ export class Socket {
         }
 
         self.lastRequestTime = response.time
-        self.id = response.id
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
       })
-      .data({ _token: this.options.csrfToken })
       .send()
   }
 
@@ -86,7 +86,6 @@ export class Socket {
 
     request.data({
       channel_name: channel,
-      _token: this.options.csrfToken,
     })
 
     if (this.lastRequestTime !== '') {
@@ -102,7 +101,6 @@ export class Socket {
   unsubscribe (channel: string): void {
     const data = {
       channel_name: channel,
-      _token: this.options.csrfToken
     }
 
     if ('sendBeacon' in navigator && navigator.sendBeacon(this.options.routes.unsubscribe, new URLSearchParams(data))) {
@@ -152,7 +150,6 @@ export class Socket {
         channel_name: channel,
         event,
         data,
-        _token: this.options.csrfToken
       })
 
     if (this.lastRequestTime !== '') {
@@ -192,8 +189,23 @@ export class Socket {
   }
 
   private createRequest (method: string, url: string): Request {
+    const self = this;
     const request = new Request(method, url)
+
     request.setWithCredentials(this.options.withCredentials || false)
+
+    request.beforeSend(function (xhr: XMLHttpRequest) {
+      if (self.storage.get().id) {
+        xhr.setRequestHeader('X-Socket-ID', self.storage.get().id)
+      }
+    })
+
+    request.success(function (xhr: XMLHttpRequest) {
+      const id = xhr.getResponseHeader('X-Socket-ID');
+      if (id) {
+        self.storage.set('id', self.id = id);
+      }
+    });
 
     return request
   }
@@ -236,7 +248,6 @@ export class Socket {
       .data({
         time: this.lastRequestTime,
         channels,
-        _token: this.options.csrfToken
       })
       .send()
   }
