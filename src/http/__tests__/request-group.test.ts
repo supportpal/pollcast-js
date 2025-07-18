@@ -42,40 +42,39 @@ describe('RequestGroup', () => {
     expect(group).toBeInstanceOf(RequestGroup);
   });
 
-  it('executes callback after all requests succeed', (done) => {
+  it('executes callback after all requests succeed', async () => {
     xhr.status = 200;
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
 
-    group.then((responses) => {
-      expect(responses).toHaveLength(2);
-      expect(responses[0].status).toBe(200);
-      expect(responses[1].status).toBe(200);
-      done();
-    });
+    await new Promise<void>((resolve) => {
+      group.then((responses) => {
+        expect(responses).toHaveLength(2);
+        expect(responses[0].status).toBe(200);
+        expect(responses[1].status).toBe(200);
+        resolve();
+      });
 
-    addEventListener.mock.calls.forEach(([, callback]) => callback());
+      addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
+    });
   });
 
-  it('executes error callback if any request fails', (done) => {
+  it('executes error callback if any request fails', async () => {
     xhr.status = 500;
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
 
-    group.then(
-      () => {},
-      (error) => {
-        expect(error.status).toBe(500);
-        done();
-      }
-    );
-
-    addEventListener.mock.calls.forEach(([, callback]) => callback());
+    await expect(
+      new Promise((resolve, reject) => {
+        group.then(resolve, reject);
+        addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
+      })
+    ).rejects.toMatchObject({ status: 500 });
   });
 
-  it('executes default error callback if any request fails', (done) => {
+  it('executes default error callback if any request fails', async () => {
     xhr.status = 500;
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
@@ -83,9 +82,7 @@ describe('RequestGroup', () => {
 
     group.then(() => {});
 
-    addEventListener.mock.calls.forEach(([, callback]) => callback());
-
-    done();
+    addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
   });
 
   it('sends all requests in the group', () => {

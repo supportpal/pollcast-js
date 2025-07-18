@@ -5,7 +5,7 @@ export class PresenceChannel extends PrivateChannel implements Channel {
   /**
    * Listen for when you've successfully joined a channel.
    */
-  here (callback: Function): this {
+  here (callback: (data: any[]) => void): this {
     this.socket.on(this.name, 'pollcast:subscription_succeeded', (members: any[]) => {
       callback(members.map((m) => m.user_info))
     })
@@ -16,7 +16,7 @@ export class PresenceChannel extends PrivateChannel implements Channel {
   /**
    * Listen for someone joining the channel.
    */
-  joining (callback: Function): this {
+  joining (callback: (data: any) => void): this {
     this.socket.on(this.name, 'pollcast:member_added', (member: any) => callback(member.user_info))
 
     return this
@@ -25,7 +25,7 @@ export class PresenceChannel extends PrivateChannel implements Channel {
   /**
    * Listen for someone leaving the channel.
    */
-  leaving (callback: Function): this {
+  leaving (callback: (data: any) => void): this {
     this.socket.on(this.name, 'pollcast:member_removed', (member: any) => callback(member.user_info))
 
     return this

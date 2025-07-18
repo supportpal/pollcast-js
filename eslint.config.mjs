@@ -2,8 +2,7 @@ import eslint from "@eslint/js";
 import globals from "globals";
 import tseslint from 'typescript-eslint';
 import jest from "eslint-plugin-jest";
-import stylisticJs from '@stylistic/eslint-plugin-js'
-import stylisticTs from '@stylistic/eslint-plugin-ts'
+import stylistic from '@stylistic/eslint-plugin'
 import {includeIgnoreFile} from "@eslint/compat";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
@@ -31,16 +30,26 @@ export default tseslint.config(
     plugins: {
       jest: jest,
       '@typescript-eslint': tseslint.plugin,
-      '@stylistic/js': stylisticJs,
-      '@stylistic/ts': stylisticTs
+      '@stylistic': stylistic
     },
     rules: {
       indent: 'off',
       "@typescript-eslint/no-explicit-any": "off",
-      '@typescript-eslint/no-this-alias': 'warn',
+      '@typescript-eslint/no-this-alias': ['warn', { allowedNames: ['self'] }],
       '@typescript-eslint/no-unsafe-function-type': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@stylistic/ts/indent': ['error', 2]
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "args": "all",
+          "argsIgnorePattern": "^_",
+          "caughtErrors": "all",
+          "caughtErrorsIgnorePattern": "^_",
+          "destructuredArrayIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "ignoreRestSiblings": true
+        }
+      ],
+      '@stylistic/indent': ['error', 2]
     },
   },
   {
