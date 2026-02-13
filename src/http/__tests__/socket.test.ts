@@ -279,7 +279,7 @@ describe('poll', () => {
           send: jest.fn(function () {
             // Trigger the fail callback when send is called
             if (failCb) {
-              const xhr = createXhr({ status: 401, responseText: '{"code": "TOKEN_EXPIRED", "message": "Token has expired"}' })
+              const xhr = createXhr({ status: 401, responseText: '{"status": "error", "data": {"code": "TOKEN_EXPIRED"}, "message": "X-Socket-ID header has expired."}' })
               failCb(xhr);
             }
           })
@@ -339,7 +339,7 @@ describe('poll', () => {
       // poll implementation - returns 401 but without TOKEN_EXPIRED code
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ status: 401, responseText: '{"code": "UNAUTHORIZED", "message": "Unauthorized"}' })
+          const xhr = createXhr({ status: 401, responseText: '{"data": {"code": "UNAUTHORIZED"}, "message": "Unauthorized"}' })
           cb(xhr)
 
           return this
