@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/supportpal/pollcast-js/compare/v2.1.0...v2.2.0) (2026-02-13)
+
+
+### Features
+
+* reconnect on expired token ([#619](https://github.com/supportpal/pollcast-js/issues/619)) ([53a1ea0](https://github.com/supportpal/pollcast-js/commit/53a1ea08c804faea4ef0b1b49d425e50a231f4f6))
+
 # [2.1.0](https://github.com/supportpal/pollcast-js/compare/v2.0.0...v2.1.0) (2025-07-18)
 
 
