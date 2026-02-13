@@ -40,9 +40,9 @@ jobs:
       - name: Run semantic-release
         uses: cycjimmy/semantic-release-action@v6
         with:
+          semantic_version: 25
           extra_plugins: |
             @semantic-release/changelog
             @semantic-release/git
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
