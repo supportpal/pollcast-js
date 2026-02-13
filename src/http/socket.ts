@@ -163,7 +163,8 @@ export class Socket {
    * Disconnect the client from the server.
    */
   disconnect (): void {
-    this.id = ''
+    this.id = '';
+    this.lastRequestTime = '';
     this.requestQueue = [];
     if (this.request) {
       this.request.abort()
@@ -231,6 +232,23 @@ export class Socket {
     this.request
       .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
       .fail((xhr: XMLHttpRequest) => {
+        // Reconnect on expired token.
+        if (xhr.status === 401) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.code === 'TOKEN_EXPIRED') {
+              // Save channels before disconnecting
+              const channelsToResubscribe = Object.keys(this.channels);
+              self.disconnect();
+              self.connect();
+              for (const _channel of channelsToResubscribe) {
+                self.subscribe(_channel);
+              }
+            }
+          } catch (_e) {
+            // If we can't parse the response, ignore the error
+          }
+        }
         // https://github.com/supportpal/pollcast/issues/7
         if (xhr.status === 404) {
           for (const channel in this.channels) {
