@@ -236,7 +236,7 @@ export class Socket {
         if (xhr.status === 401) {
           try {
             const response = JSON.parse(xhr.responseText);
-            if (response.code === 'TOKEN_EXPIRED') {
+            if (response.data?.code === 'TOKEN_EXPIRED') {
               // Save channels before disconnecting
               const channelsToResubscribe = Object.keys(this.channels);
               self.disconnect();
