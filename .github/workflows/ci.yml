@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for trusted publishing and npm provenance
+      contents: write # semantic release: publish a GitHub release
+      issues: write # semantic release: comment on released issues
+      pull-requests: write # semantic release:  comment on released pull requests
+      id-token: write # semantic release: use OIDC to publish to npm
 
     steps:
       - uses: actions/checkout@v6
