@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/supportpal/pollcast-js/compare/v2.2.0...v2.2.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* response data on expired token ([#621](https://github.com/supportpal/pollcast-js/issues/621)) ([6535bbf](https://github.com/supportpal/pollcast-js/commit/6535bbf6c3d5f521fde68d0939c07a366e74ed06))
+
 # [2.2.0](https://github.com/supportpal/pollcast-js/compare/v2.1.0...v2.2.0) (2026-02-13)
 
 
