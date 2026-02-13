@@ -1,3 +1,10 @@
+## [2.2.3](https://github.com/supportpal/pollcast-js/compare/v2.2.2...v2.2.3) (2026-02-13)
+
+
+### Bug Fixes
+
+* force release ([e14911a](https://github.com/supportpal/pollcast-js/commit/e14911ab7313bd313172f679f29d9761f1db8414))
+
 ## [2.2.2](https://github.com/supportpal/pollcast-js/compare/v2.2.1...v2.2.2) (2026-02-13)
 
 
