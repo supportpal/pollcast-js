@@ -245,7 +245,7 @@ export class Socket {
                 self.subscribe(_channel);
               }
             }
-          } catch (e) {
+          } catch (_e) {
             // If we can't parse the response, ignore the error
           }
         }
