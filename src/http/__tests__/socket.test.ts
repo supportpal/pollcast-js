@@ -236,6 +236,130 @@ describe('poll', () => {
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 
+  it('reconnects and resubscribes on 401 expired token', () => {
+    const mockSubscribeSend = jest.fn()
+
+    // We need to capture the reconnect success callback and fire it AFTER subscribe has queued
+    let reconnectSuccessCb: ((xhr: XMLHttpRequest) => void) | null = null;
+
+    requestGroup
+      // First connect (before 401) - empty queue
+      .mockImplementationOnce(() => createMockRequestGroup())
+      // Second connect (after 401 reconnect) - has subscribe in queue
+      .mockImplementationOnce((requests: any[]) => {
+        return createMockRequestGroup({
+          then: jest.fn(function (cb) {
+            // Process the queued requests
+            while (requests.length > 0) {
+              const req = requests.shift();
+              req?.send();
+            }
+            cb([]);
+          })
+        });
+      });
+
+    request
+      // 1. connect implementation
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = createXhr({ responseText: '{"status": "success", "time": "1"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          cb(xhr)
+          return this
+        }),
+      }))
+      // 2. poll implementation - returns 401 with TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => {
+        let failCb: ((xhr: XMLHttpRequest) => void) | null = null;
+        return createMockRequest({
+          fail: jest.fn(function (this: Request, cb) {
+            failCb = cb;
+            return this
+          }),
+          send: jest.fn(function () {
+            // Trigger the fail callback when send is called
+            if (failCb) {
+              const xhr = createXhr({ status: 401, responseText: '{"code": "TOKEN_EXPIRED", "message": "Token has expired"}' })
+              failCb(xhr);
+            }
+          })
+        });
+      })
+      // 3. Reconnect implementation (after 401) - DON'T fire success immediately
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          // Capture the callback, don't fire it yet
+          reconnectSuccessCb = cb;
+          return this
+        }),
+      }))
+      // 4. subscribe implementation (created during fail callback, queued)
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('3') })
+          cb(xhr)
+          return this
+        }),
+        send: mockSubscribeSend
+      }))
+      // 5. Second poll after reconnect
+      .mockImplementationOnce(() : any => createMockRequest())
+
+    const connectRoute = '/connect'; const subscribeRoute = '/subscribe'; const receiveRoute = '/receive'
+    const socket = new Socket({ routes: { connect: connectRoute, subscribe: subscribeRoute, receive: receiveRoute } })
+
+    WindowVisibility.setActive()
+    const cb = () => {}
+    socket['channels'] = { channel1: { new_message: [cb] } };
+
+    socket.connect()
+
+    // Now fire the reconnect success callback - this will process the queue which has the subscribe
+    expect(reconnectSuccessCb).not.toBeNull();
+    const xhr = createXhr({ responseText: '{"status": "success", "time": "2"}', getResponseHeader: jest.fn().mockReturnValue('2') })
+    reconnectSuccessCb!(xhr);
+
+    expect(mockSubscribeSend).toHaveBeenCalledTimes(1)
+    expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
+  })
+
+  it('poll fail callback does nothing on 401 if not TOKEN_EXPIRED', () => {
+    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
+    request
+      // connect implementation
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          cb(xhr)
+
+          return this
+        })
+      }))
+      // poll implementation - returns 401 but without TOKEN_EXPIRED code
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          const xhr = createXhr({ status: 401, responseText: '{"code": "UNAUTHORIZED", "message": "Unauthorized"}' })
+          cb(xhr)
+
+          return this
+        })
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect' } })
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [() => {}] } },
+      writable: true
+    })
+
+    socket.connect()
+
+    // Should only be called twice: initial connect and poll (no reconnect)
+    expect(request).toHaveBeenCalledTimes(2)
+  })
+
   it('poll fail callback does nothing if not http status code 404', () => {
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request
@@ -288,7 +412,7 @@ describe('poll', () => {
       // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
-          cb()
+          cb(createXhr(), { type: 'loadend' } as ProgressEvent<XMLHttpRequestEventTarget>)
 
           return this
         }),
@@ -446,7 +570,7 @@ describe('subscribe', () => {
     expect(request).toHaveBeenCalledWith('POST', route)
     expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Token', 'foo')
     expect(mockData).toHaveBeenCalledWith({ channel_name: channel })
-    expect(socket.requestQueue.length).toBe(1)
+    expect((socket as any).requestQueue.length).toBe(1)
     expect(socket.subscribed).toEqual({ channel1: {} })
   })
 
@@ -623,7 +747,7 @@ describe('emit', () => {
 
     expect(request).toHaveBeenCalledWith('POST', route)
     expect(mockData).toHaveBeenCalledWith({ channel_name: 'channel1', data: {}, event: 'typing' })
-    expect(socket.requestQueue.length).toBe(1)
+    expect((socket as any).requestQueue.length).toBe(1)
   })
 
   it('sends request immediately', () => {
@@ -641,7 +765,7 @@ describe('emit', () => {
 
     const route = '/publish'
     const socket = new Socket({ routes: { publish: route } })
-    socket.lastRequestTime = '123';
+    socket['lastRequestTime'] = '123';
     socket.emit('channel1', 'typing', {})
 
     expect(request).toHaveBeenCalledWith('POST', route)
@@ -729,6 +853,13 @@ describe('disconnect', () => {
     expect(socket.id).toBe('')
   })
 
+  it('resets lastRequestTime to empty string', () => {
+    const socket = new Socket({})
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket.disconnect()
+    expect(socket['lastRequestTime']).toBe('')
+  })
+
   it('stops polling in always callback after disconnect', () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
@@ -752,7 +883,7 @@ describe('disconnect', () => {
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
           socket.disconnect()
-          cb()
+          cb(createXhr(), { type: 'loadend' } as ProgressEvent<XMLHttpRequestEventTarget>)
 
           return this
         }),
