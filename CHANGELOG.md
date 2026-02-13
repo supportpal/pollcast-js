@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/supportpal/pollcast-js/compare/v2.2.1...v2.2.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* use semantic release v25 ([7d810a1](https://github.com/supportpal/pollcast-js/commit/7d810a1618d4d8191537d4158bda0e8cda03c3b7))
+
 ## [2.2.1](https://github.com/supportpal/pollcast-js/compare/v2.2.0...v2.2.1) (2026-02-13)
 
 
