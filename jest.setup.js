@@ -13,15 +13,19 @@ if (typeof global.Response === 'undefined') {
       this.bodyUsed = false
     }
 
+    _getBodyAsString() {
+      if (this.body === null || this.body === undefined) {
+        return ''
+      }
+      return String(this.body)
+    }
+
     async text() {
       if (this.bodyUsed) {
         throw new TypeError("Failed to execute 'text' on 'Response': body stream already read")
       }
       this.bodyUsed = true
-      if (this.body === null || this.body === undefined) {
-        return ''
-      }
-      return String(this.body)
+      return this._getBodyAsString()
     }
 
     async json() {
@@ -29,7 +33,7 @@ if (typeof global.Response === 'undefined') {
         throw new TypeError("Failed to execute 'json' on 'Response': body stream already read")
       }
       this.bodyUsed = true
-      const bodyStr = this.body === null || this.body === undefined ? '' : String(this.body)
+      const bodyStr = this._getBodyAsString()
       return JSON.parse(bodyStr || '{}')
     }
 
