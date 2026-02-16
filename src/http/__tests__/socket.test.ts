@@ -631,7 +631,7 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual({})
   })
 
-  it('send request fails', () => {
+  it('sends request that fails', () => {
     const fetchMock = jest.fn().mockImplementation(() => Promise.reject(new Error('Network error')))
     global.fetch = fetchMock
 
@@ -656,7 +656,8 @@ describe('Unsubscribe', () => {
     })
 
     // Channel is deleted immediately (optimistically), even if request fails
-    // This matches sendBeacon's behavior where channel is deleted if sendBeacon returns true
+    // NOTE: This differs from sendBeacon which only deleted if it returned true
+    // With fetch, we can't know synchronously if the request will succeed, so we delete optimistically
     expect(socket.subscribed).toEqual({})
   })
 })
