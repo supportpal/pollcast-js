@@ -1,3 +1,10 @@
+## [2.2.4](https://github.com/supportpal/pollcast-js/compare/v2.2.3...v2.2.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* **deps:** bump js-yaml ([#629](https://github.com/supportpal/pollcast-js/issues/629)) ([3a32988](https://github.com/supportpal/pollcast-js/commit/3a32988f3f3dd22128239c86d33813923a58a845))
+
 ## [2.2.3](https://github.com/supportpal/pollcast-js/compare/v2.2.2...v2.2.3) (2026-02-13)
 
 
