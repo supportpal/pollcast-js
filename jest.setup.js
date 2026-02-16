@@ -10,9 +10,14 @@ if (typeof global.Response === 'undefined') {
       this.url = ''
       this.redirected = false
       this.type = 'basic'
+      this.bodyUsed = false
     }
 
     async text() {
+      if (this.bodyUsed) {
+        throw new TypeError("Failed to execute 'text' on 'Response': body stream already read")
+      }
+      this.bodyUsed = true
       if (this.body === null || this.body === undefined) {
         return ''
       }
@@ -20,11 +25,18 @@ if (typeof global.Response === 'undefined') {
     }
 
     async json() {
-      const text = await this.text()
-      return JSON.parse(text || '{}')
+      if (this.bodyUsed) {
+        throw new TypeError("Failed to execute 'json' on 'Response': body stream already read")
+      }
+      this.bodyUsed = true
+      const bodyStr = this.body === null || this.body === undefined ? '' : String(this.body)
+      return JSON.parse(bodyStr || '{}')
     }
 
     clone() {
+      if (this.bodyUsed) {
+        throw new TypeError("Failed to execute 'clone' on 'Response': body stream already read")
+      }
       return new Response(this.body, {
         status: this.status,
         statusText: this.statusText,

@@ -83,13 +83,14 @@ export class Request {
       keepalive: this.keepalive
     })
       .then((fetchResponse) => {
+        // Clone response for each callback to allow independent body consumption
         if (fetchResponse.ok) {
-          this.successCallbacks.forEach((cb) => cb(fetchResponse))
+          this.successCallbacks.forEach((cb) => cb(fetchResponse.clone()))
         } else {
-          this.failCallbacks.forEach((cb) => cb(fetchResponse))
+          this.failCallbacks.forEach((cb) => cb(fetchResponse.clone()))
         }
 
-        this.alwaysCallbacks.forEach((cb) => cb(fetchResponse))
+        this.alwaysCallbacks.forEach((cb) => cb(fetchResponse.clone()))
       })
       .catch((error) => {
         // Handle network errors or aborted requests

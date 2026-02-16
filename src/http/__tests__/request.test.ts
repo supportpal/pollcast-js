@@ -5,6 +5,21 @@ expect.extend({ toHaveBeenCalledExactlyOnceWith, toHaveBeenCalledBefore });
 
 let mockFetch: jest.Mock
 
+// Helper to create a mock Response with clone support
+const createMockResponse = (config: any) => {
+  const response = {
+    ok: config.ok !== undefined ? config.ok : true,
+    status: config.status || 200,
+    text: jest.fn().mockResolvedValue(config.text || ''),
+    json: jest.fn().mockResolvedValue(config.json || {}),
+    headers: config.headers || new Map(),
+    clone: jest.fn()
+  }
+  // Make clone return a new instance with the same properties
+  response.clone.mockImplementation(() => createMockResponse(config))
+  return response
+}
+
 beforeEach(() => {
   jest.resetAllMocks()
   jest.restoreAllMocks()
@@ -16,12 +31,11 @@ beforeEach(() => {
 
 describe('failed requests', () => {
   beforeEach(() => {
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: false,
       status: 500,
-      text: jest.fn().mockResolvedValue(''),
-      headers: new Map()
-    })
+      text: ''
+    }))
   })
 
   it('does not run success callback', async () => {
@@ -75,12 +89,12 @@ describe('successful requests', () => {
   beforeEach(() => {
     const headers = new Map()
     headers.set('content-type', 'application/json')
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: true,
       status: 200,
-      text: jest.fn().mockResolvedValue('{"data": "test"}'),
+      text: '{"data": "test"}',
       headers
-    })
+    }))
   })
 
   it('opens xhr and sets headers', () => {
@@ -240,12 +254,12 @@ describe('the setWithCredentials method in the Request class', () => {
 
   beforeEach(() => {
     const headers = new Map()
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: true,
       status: 200,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    })
+    }))
     req = new Request('GET', '/')
   })
 
@@ -277,12 +291,12 @@ describe('the setKeepAlive method in the Request class', () => {
 
   beforeEach(() => {
     const headers = new Map()
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: true,
       status: 200,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    })
+    }))
     req = new Request('GET', '/')
   })
 

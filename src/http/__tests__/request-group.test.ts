@@ -3,6 +3,21 @@ import { Request } from '../request';
 
 let mockFetch: jest.Mock;
 
+// Helper to create a mock Response with clone support
+const createMockResponse = (config: any) => {
+  const response = {
+    ok: config.ok !== undefined ? config.ok : true,
+    status: config.status || 200,
+    text: jest.fn().mockResolvedValue(config.text || ''),
+    json: jest.fn().mockResolvedValue(config.json || {}),
+    headers: config.headers || new Map(),
+    clone: jest.fn()
+  }
+  // Make clone return a new instance with the same properties
+  response.clone.mockImplementation(() => createMockResponse(config))
+  return response
+}
+
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
@@ -21,12 +36,12 @@ describe('RequestGroup', () => {
 
   it('executes callback after all requests succeed', async () => {
     const headers = new Map();
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: true,
       status: 200,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    });
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
@@ -46,12 +61,12 @@ describe('RequestGroup', () => {
 
   it('executes error callback if any request fails', async () => {
     const headers = new Map();
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: false,
       status: 500,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    });
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
@@ -68,12 +83,12 @@ describe('RequestGroup', () => {
 
   it('executes default error callback if any request fails', async () => {
     const headers = new Map();
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: false,
       status: 500,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    });
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
@@ -92,12 +107,12 @@ describe('RequestGroup', () => {
 
   it('sends all requests in the group', () => {
     const headers = new Map();
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValue(createMockResponse({
       ok: true,
       status: 200,
-      text: jest.fn().mockResolvedValue(''),
+      text: '',
       headers
-    });
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
