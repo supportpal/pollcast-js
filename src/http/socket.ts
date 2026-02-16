@@ -103,9 +103,18 @@ export class Socket {
       channel_name: channel,
     }
 
-    if ('sendBeacon' in navigator && navigator.sendBeacon(this.options.routes.unsubscribe, new URLSearchParams(data))) {
+    fetch(this.options.routes.unsubscribe, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(data),
+      keepalive: true,
+    }).then(() => {
       delete this.channels[channel]
-    }
+    }).catch(() => {
+      // Silently ignore errors, similar to sendBeacon behavior
+    })
   }
 
   /**

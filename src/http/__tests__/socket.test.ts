@@ -603,12 +603,9 @@ describe('subscribe', () => {
 })
 
 describe('Unsubscribe', () => {
-  it('sends request', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => true)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
+  it('sends request', async () => {
+    const fetchMock = jest.fn().mockImplementation(() => Promise.resolve({ ok: true }))
+    global.fetch = fetchMock
 
     const route = '/unsubscribe'; const channel = 'channel1'
 
@@ -621,16 +618,23 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(fetchMock).toHaveBeenCalledWith(route, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ channel_name: channel }),
+      keepalive: true,
+    })
+
+    // Wait for promise to resolve
+    await new Promise(resolve => setTimeout(resolve, 0))
     expect(socket.subscribed).toEqual({})
   })
 
-  it('send request fails', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => false)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
+  it('send request fails', async () => {
+    const fetchMock = jest.fn().mockImplementation(() => Promise.reject(new Error('Network error')))
+    global.fetch = fetchMock
 
     const route = '/unsubscribe'; const channel = 'channel1'
 
@@ -643,7 +647,17 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(fetchMock).toHaveBeenCalledWith(route, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ channel_name: channel }),
+      keepalive: true,
+    })
+
+    // Wait for promise to reject
+    await new Promise(resolve => setTimeout(resolve, 0))
     expect(socket.subscribed).toEqual(channels)
   })
 })
