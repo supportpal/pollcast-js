@@ -103,6 +103,12 @@ export class Socket {
       channel_name: channel,
     }
 
+    // Delete channel optimistically, matching sendBeacon's behavior
+    // sendBeacon would delete immediately if it successfully queued the request
+    delete this.channels[channel]
+
+    // Use fetch with keepalive to ensure the request is sent even if the page is closed
+    // We don't need to wait for the response or handle errors, similar to sendBeacon
     fetch(this.options.routes.unsubscribe, {
       method: 'POST',
       headers: {
@@ -110,8 +116,6 @@ export class Socket {
       },
       body: new URLSearchParams(data),
       keepalive: true,
-    }).then(() => {
-      delete this.channels[channel]
     }).catch(() => {
       // Silently ignore errors, similar to sendBeacon behavior
     })

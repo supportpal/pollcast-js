@@ -603,7 +603,7 @@ describe('subscribe', () => {
 })
 
 describe('Unsubscribe', () => {
-  it('sends request', async () => {
+  it('sends request', () => {
     const fetchMock = jest.fn().mockImplementation(() => Promise.resolve({ ok: true }))
     global.fetch = fetchMock
 
@@ -627,12 +627,11 @@ describe('Unsubscribe', () => {
       keepalive: true,
     })
 
-    // Wait for promise to resolve
-    await new Promise(resolve => setTimeout(resolve, 0))
+    // Channel is deleted immediately (optimistically), matching sendBeacon behavior
     expect(socket.subscribed).toEqual({})
   })
 
-  it('send request fails', async () => {
+  it('send request fails', () => {
     const fetchMock = jest.fn().mockImplementation(() => Promise.reject(new Error('Network error')))
     global.fetch = fetchMock
 
@@ -656,9 +655,9 @@ describe('Unsubscribe', () => {
       keepalive: true,
     })
 
-    // Wait for promise to reject
-    await new Promise(resolve => setTimeout(resolve, 0))
-    expect(socket.subscribed).toEqual(channels)
+    // Channel is deleted immediately (optimistically), even if request fails
+    // This matches sendBeacon's behavior where channel is deleted if sendBeacon returns true
+    expect(socket.subscribed).toEqual({})
   })
 })
 
