@@ -75,7 +75,6 @@ describe('connect', () => {
     const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
-      beforeSend: jest.fn(function (this: Request, cb) { cb(createResponse()); return this; }),
       success: jest.fn(function (this: Request, cb) {
         cb(createResponse({
           responseText: '{"status": "success", "time": "1", "id": null}',
@@ -137,13 +136,16 @@ describe('connect', () => {
   })
 
   it('sets socket-id before sending the request', () => {
-    const socketId = 'socket-1', mockSetRequestHeader = jest.fn();
+    const socketId = 'socket-1';
+    let capturedHeaderFunction: (() => string | null) | null = null;
+
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
-      beforeSend: jest.fn(function (this: Request, cb) {
-        (new LocalStorage('socket')).set('id', socketId);
-        cb(createResponse({setRequestHeader: mockSetRequestHeader}));
-
+      setRequestHeader: jest.fn(function (this: Request, name: string, value: string | (() => string | null)) {
+        // Capture the function passed for X-Socket-ID header
+        if (name === 'X-Socket-ID' && typeof value === 'function') {
+          capturedHeaderFunction = value;
+        }
         return this;
       }),
       success: jest.fn(function (this: Request, cb) {
@@ -159,9 +161,18 @@ describe('connect', () => {
 
     const route = '/connect'
     const socket = new Socket({ routes: { connect: route } })
+
+    // Set the socket ID in localStorage before connecting
+    const storage = new LocalStorage('socket');
+    storage.set('id', socketId);
+
     socket.connect()
 
-    expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Socket-ID', socketId);
+    // Verify that a function was passed to setRequestHeader
+    expect(capturedHeaderFunction).not.toBeNull();
+
+    // Verify that the function returns the socket ID from localStorage
+    expect(capturedHeaderFunction!()).toBe(socketId);
   })
 })
 

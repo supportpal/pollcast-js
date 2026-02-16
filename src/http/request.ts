@@ -12,13 +12,12 @@ export interface ResponseLike {
 export class Request {
   private method: string
   private url: string
-  private headers: { [key: string]: string } = {}
+  private headers: { [key: string]: string | (() => string | null) } = {}
   private body: object = {}
   private withCredentials: boolean = false
   private successCallbacks: ((response: ResponseLike) => void)[] = []
   private failCallbacks: ((response: ResponseLike) => void)[] = []
   private alwaysCallbacks: ((response: ResponseLike, e?: Event) => void)[] = []
-  private beforeSendCallbacks: ((response: ResponseLike) => void)[] = []
   private abortController: AbortController = new AbortController()
   private response: ResponseLike | null = null
 
@@ -53,7 +52,7 @@ export class Request {
     return this
   }
 
-  setRequestHeader (name: string, value: string): Request {
+  setRequestHeader (name: string, value: string | (() => string | null)): Request {
     this.headers[name] = value
     return this
   }
@@ -63,32 +62,27 @@ export class Request {
     return this
   }
 
-  beforeSend (cb: (response: ResponseLike) => void): Request {
-    this.beforeSendCallbacks.push(cb)
-    return this
-  }
-
   send (): void {
     const responseHeaders: { [key: string]: string } = {}
-    
-    // Create a mock response object for beforeSend callbacks
-    const mockResponse: ResponseLike = {
-      status: 0,
-      responseText: '',
-      readyState: 1,
-      getResponseHeader: (name: string) => responseHeaders[name.toLowerCase()] || null,
-      setRequestHeader: (name: string, value: string) => {
-        this.headers[name] = value
+
+    // Evaluate lazy headers at send-time
+    const evaluatedHeaders: { [key: string]: string } = {}
+    for (const [name, value] of Object.entries(this.headers)) {
+      if (typeof value === 'function') {
+        const evaluatedValue = value()
+        if (evaluatedValue !== null) {
+          evaluatedHeaders[name] = evaluatedValue
+        }
+      } else {
+        evaluatedHeaders[name] = value
       }
     }
-
-    this.beforeSendCallbacks.forEach((cb) => cb(mockResponse))
 
     const encodedBody = urlEncodeObject(this.body)
 
     fetch(this.url, {
       method: this.method,
-      headers: this.headers,
+      headers: evaluatedHeaders,
       body: encodedBody || undefined,
       credentials: this.withCredentials ? 'include' : 'same-origin',
       signal: this.abortController.signal

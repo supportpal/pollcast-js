@@ -204,25 +204,6 @@ describe('successful requests', () => {
 
     expect(cb).toHaveBeenCalledTimes(0)
   })
-
-  it('executes all beforeSend callbacks in order before sending the request', () => {
-    const callback1 = jest.fn();
-    const callback2 = jest.fn();
-
-    const request = new Request('GET', '/some-url');
-    request.beforeSend(callback1).beforeSend(callback2).send();
-
-    expect(callback1).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      status: 0,
-      readyState: 1
-    }));
-    expect(callback2).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      status: 0,
-      readyState: 1
-    }));
-    expect(callback1).toHaveBeenCalledBefore(callback2);
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-  });
 })
 
 describe('the setWithCredentials method in the Request class', () => {

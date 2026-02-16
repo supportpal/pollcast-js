@@ -195,10 +195,8 @@ export class Socket {
 
     request.setWithCredentials(this.options.withCredentials || false)
 
-    request.beforeSend(function (mockRequest: ResponseLike) {
-      if (self.storage.get().id) {
-        mockRequest.setRequestHeader('X-Socket-ID', self.storage.get().id)
-      }
+    request.setRequestHeader('X-Socket-ID', function (){
+      return self.storage.get().id || null;
     })
 
     request.success(function (response: ResponseLike) {
