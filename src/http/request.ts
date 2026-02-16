@@ -1,25 +1,16 @@
 import { urlEncodeObject } from '../util/helpers'
 
-// Response object that mimics XMLHttpRequest interface for backward compatibility
-export interface ResponseLike {
-  status: number
-  responseText: string
-  getResponseHeader(name: string): string | null
-  setRequestHeader(name: string, value: string): void
-  readyState: number
-}
-
 export class Request {
   private method: string
   private url: string
   private headers: { [key: string]: string | (() => string | null) } = {}
   private body: object = {}
   private withCredentials: boolean = false
-  private successCallbacks: ((response: ResponseLike) => void)[] = []
-  private failCallbacks: ((response: ResponseLike) => void)[] = []
-  private alwaysCallbacks: ((response: ResponseLike, e?: Event) => void)[] = []
+  private successCallbacks: ((response: Response) => void)[] = []
+  private failCallbacks: ((response: Response) => void)[] = []
+  private alwaysCallbacks: ((response: Response, e?: Event) => void)[] = []
   private abortController: AbortController = new AbortController()
-  private response: ResponseLike | null = null
+  private response: Response | null = null
 
   constructor (method: string, url: string) {
     this.method = method
@@ -27,22 +18,22 @@ export class Request {
 
     this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-    this.fail(function (response: ResponseLike) {
+    this.fail(function (response: Response) {
       document.dispatchEvent(new CustomEvent('pollcast:request-error', { detail: response }))
     })
   }
 
-  success (cb: (response: ResponseLike) => void): Request {
+  success (cb: (response: Response) => void): Request {
     this.successCallbacks.push(cb)
     return this
   }
 
-  fail (cb: (response: ResponseLike) => void): Request {
+  fail (cb: (response: Response) => void): Request {
     this.failCallbacks.push(cb)
     return this
   }
 
-  always (cb: (response: ResponseLike, e?: Event) => void): Request {
+  always (cb: (response: Response, e?: Event) => void): Request {
     this.alwaysCallbacks.push(cb)
     return this
   }
@@ -63,8 +54,6 @@ export class Request {
   }
 
   send (): void {
-    const responseHeaders: { [key: string]: string } = {}
-
     // Evaluate lazy headers at send-time
     const evaluatedHeaders: { [key: string]: string } = {}
     for (const [name, value] of Object.entries(this.headers)) {
@@ -88,31 +77,15 @@ export class Request {
       signal: this.abortController.signal
     })
       .then(async (fetchResponse) => {
-        const responseText = await fetchResponse.text()
-        
-        // Store response headers
-        fetchResponse.headers.forEach((value, name) => {
-          responseHeaders[name.toLowerCase()] = value
-        })
-
-        // Create XMLHttpRequest-like response object
-        this.response = {
-          status: fetchResponse.status,
-          responseText: responseText,
-          readyState: 4,
-          getResponseHeader: (name: string) => responseHeaders[name.toLowerCase()] || null,
-          // No-op: headers cannot be modified after request completion
-          // (unlike beforeSend callbacks where setRequestHeader modifies this.headers)
-          setRequestHeader: () => {}
-        }
+        this.response = fetchResponse
 
         if (fetchResponse.ok) {
-          this.successCallbacks.forEach((cb) => cb(this.response))
+          this.successCallbacks.forEach((cb) => cb(fetchResponse))
         } else {
-          this.failCallbacks.forEach((cb) => cb(this.response))
+          this.failCallbacks.forEach((cb) => cb(fetchResponse))
         }
 
-        this.alwaysCallbacks.forEach((cb) => cb(this.response))
+        this.alwaysCallbacks.forEach((cb) => cb(fetchResponse))
       })
       .catch((error) => {
         // Handle network errors or aborted requests
@@ -121,15 +94,11 @@ export class Request {
           return
         }
 
-        // Create error response
-        const errorResponse: ResponseLike = {
+        // Create error response using Response constructor
+        const errorResponse = new Response(null, {
           status: 0,
-          responseText: '',
-          readyState: 4,
-          getResponseHeader: () => null,
-          // No-op: headers cannot be modified after request completion
-          setRequestHeader: () => {}
-        }
+          statusText: error.message || 'Network Error'
+        })
 
         this.response = errorResponse
         this.failCallbacks.forEach((cb) => cb(errorResponse))

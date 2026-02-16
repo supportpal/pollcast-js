@@ -164,9 +164,13 @@ describe('successful requests', () => {
 
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb).toHaveBeenCalledWith(expect.objectContaining({
-      status: 200,
-      responseText: '{"data": "test"}'
+      status: 200
     }))
+
+    // Verify we can get the response text
+    const response = cb.mock.calls[0][0]
+    const text = await response.text()
+    expect(text).toBe('{"data": "test"}')
   })
 
   it('runs always callback', async () => {

@@ -1,4 +1,4 @@
-import { Request, ResponseLike } from './request'
+import { Request } from './request'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
 import {LocalStorage} from "../util/local-storage";
@@ -53,8 +53,8 @@ export class Socket {
     const self = this
     this.request = this.createRequest('POST', this.options.routes.connect)
     this.request
-      .success(function (response: ResponseLike) {
-        const responseData = JSON.parse(response.responseText)
+      .success(async function (response: Response) {
+        const responseData = await response.json()
         if (responseData.status !== 'success') {
           return
         }
@@ -199,8 +199,8 @@ export class Socket {
       return self.storage.get().id || null;
     })
 
-    request.success(function (response: ResponseLike) {
-      const id = response.getResponseHeader('X-Socket-ID');
+    request.success(function (response: Response) {
+      const id = response.headers.get('X-Socket-ID');
       if (id) {
         self.storage.set('id', self.id = id);
       }
@@ -228,12 +228,12 @@ export class Socket {
 
     this.request = this.createRequest('POST', this.options.routes.receive)
     this.request
-      .success((response: ResponseLike) => self.fireEvents(response.responseText))
-      .fail((response: ResponseLike) => {
+      .success(async (response: Response) => self.fireEvents(response))
+      .fail(async (response: Response) => {
         // Reconnect on expired token.
         if (response.status === 401) {
           try {
-            const responseData = JSON.parse(response.responseText);
+            const responseData = await response.json();
             if (responseData.data?.code === 'TOKEN_EXPIRED') {
               // Save channels before disconnecting
               const channelsToResubscribe = Object.keys(this.channels);
@@ -268,16 +268,16 @@ export class Socket {
       .send()
   }
 
-  private fireEvents (response: any): void {
-    response = JSON.parse(response)
-    if (response.status !== 'success') {
+  private async fireEvents (response: Response): Promise<void> {
+    const data = await response.json()
+    if (data.status !== 'success') {
       return
     }
 
-    this.lastRequestTime = response.time
+    this.lastRequestTime = data.time
 
-    Object.keys(response.events).forEach((event) => {
-      const item = response.events[event]
+    Object.keys(data.events).forEach((event) => {
+      const item = data.events[event]
       this.dispatch(item.channel.name, item.event, item.payload)
     })
   }
