@@ -18,6 +18,7 @@ const createMockRequest = (overrides: Partial<Request> = {}): jest.Mocked<Reques
     fail: jest.fn().mockReturnThis(),
     always: jest.fn().mockReturnThis(),
     setWithCredentials: jest.fn().mockReturnThis(),
+    setKeepAlive: jest.fn().mockReturnThis(),
     setRequestHeader: jest.fn().mockReturnThis(),
     data: jest.fn().mockReturnThis(),
     send: jest.fn(),
@@ -795,16 +796,13 @@ describe('subscribe', () => {
 
 describe('Unsubscribe', () => {
   it('sends request', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => true)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
-
     const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
+
+    const mockRequest = createMockRequest()
+    request.mockImplementation(() => mockRequest)
 
     const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
@@ -812,21 +810,29 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
+    expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
+    expect(mockRequest.send).toHaveBeenCalled()
+
+    // Simulate successful response
+    // Note: createRequest adds a success callback for socket ID extraction,
+    // and unsubscribe adds another one for channel deletion
+    const socketIdCallback = mockRequest.success.mock.calls[0][0]
+    const channelDeletionCallback = mockRequest.success.mock.calls[1][0]
+    socketIdCallback(createResponse())
+    channelDeletionCallback(createResponse())
+
     expect(socket.subscribed).toEqual({})
   })
 
   it('send request fails', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => false)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
-
     const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
+
+    const mockRequest = createMockRequest()
+    request.mockImplementation(() => mockRequest)
 
     const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
@@ -834,7 +840,12 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
+    expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
+    expect(mockRequest.send).toHaveBeenCalled()
+
+    // Simulate failed response - success callback is not called
+    // So channel should remain subscribed
     expect(socket.subscribed).toEqual(channels)
   })
 })

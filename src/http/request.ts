@@ -6,11 +6,11 @@ export class Request {
   private headers: { [key: string]: string | (() => string | null) } = {}
   private body: object = {}
   private withCredentials: boolean = false
+  private keepalive: boolean = false
   private successCallbacks: ((response: Response) => void)[] = []
   private failCallbacks: ((response: Response) => void)[] = []
   private alwaysCallbacks: ((response: Response, e?: Event) => void)[] = []
   private abortController: AbortController = new AbortController()
-  private response: Response | null = null
 
   constructor (method: string, url: string) {
     this.method = method
@@ -40,6 +40,11 @@ export class Request {
 
   setWithCredentials (value: boolean): Request {
     this.withCredentials = value
+    return this
+  }
+
+  setKeepAlive (value: boolean): Request {
+    this.keepalive = value
     return this
   }
 
@@ -74,11 +79,10 @@ export class Request {
       headers: evaluatedHeaders,
       body: encodedBody || undefined,
       credentials: this.withCredentials ? 'include' : 'same-origin',
-      signal: this.abortController.signal
+      signal: this.abortController.signal,
+      keepalive: this.keepalive
     })
       .then(async (fetchResponse) => {
-        this.response = fetchResponse
-
         if (fetchResponse.ok) {
           this.successCallbacks.forEach((cb) => cb(fetchResponse))
         } else {
@@ -100,7 +104,6 @@ export class Request {
           statusText: error.message || 'Network Error'
         })
 
-        this.response = errorResponse
         this.failCallbacks.forEach((cb) => cb(errorResponse))
         this.alwaysCallbacks.forEach((cb) => cb(errorResponse))
       })
