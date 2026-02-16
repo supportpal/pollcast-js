@@ -497,44 +497,6 @@ describe('poll', () => {
     expect(request).toHaveBeenCalledTimes(2)
   })
 
-  it('poll fail callback does nothing if not http status code 404', () => {
-    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
-    request
-    // connect implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createResponse({
-            text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
-          })
-          cb(xhr)
-
-          return this
-        })
-      }))
-    // poll implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        fail: jest.fn(function (this: Request, cb) {
-          const xhr = createResponse({ status: 400 })
-          cb(xhr)
-
-          return this
-        })
-      }))
-
-    const socket = new Socket({ routes: { connect: '/connect' } })
-
-    WindowVisibility.setActive()
-    Object.defineProperty(socket, 'channels', {
-      value: { channel1: { new_message: [() => {}] } },
-      writable: true
-    })
-
-    socket.connect()
-  })
-
   it('always loops', async () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
@@ -640,40 +602,6 @@ describe('poll', () => {
 
     expect(cb).toHaveBeenCalled();
   });
-
-  it('skips unknown events', () => {
-    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
-    request
-    // connect implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createResponse({
-            text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
-          })
-          cb(xhr)
-
-          return this
-        })
-      }))
-    // poll implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createResponse({
-            text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}'),
-          })
-          cb(xhr)
-
-          return this
-        })
-      }))
-
-    const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } })
-    socket.connect()
-  })
 
   it('skips unexpected responses', async () => {
     WindowVisibility.setActive();

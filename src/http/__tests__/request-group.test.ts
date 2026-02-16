@@ -78,10 +78,16 @@ describe('RequestGroup', () => {
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
 
-    group.then(() => {});
+    // Should not throw when error callback is not provided (uses default)
+    expect(() => {
+      group.then(() => {});
+    }).not.toThrow();
 
     // Wait for promises to resolve
     await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Verify requests were sent
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it('sends all requests in the group', () => {
