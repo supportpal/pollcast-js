@@ -1,4 +1,4 @@
-import { Request } from './request';
+import { Request, ResponseLike } from './request';
 
 export class RequestGroup {
   private requests: Request[];
@@ -10,12 +10,12 @@ export class RequestGroup {
   /**
    * Execute a callback after all requests have completed successfully.
    */
-  then(callback: (responses: XMLHttpRequest[]) => void, errorCallback: (error: XMLHttpRequest) => void = () => {}): void {
+  then(callback: (responses: ResponseLike[]) => void, errorCallback: (error: ResponseLike) => void = () => {}): void {
     const promises = this.requests.map((request) => {
-      return new Promise<XMLHttpRequest>((resolve, reject) => {
+      return new Promise<ResponseLike>((resolve, reject) => {
         request
-          .success((xhr: XMLHttpRequest) => resolve(xhr))
-          .fail((xhr: XMLHttpRequest) => reject(xhr));
+          .success((response: ResponseLike) => resolve(response))
+          .fail((response: ResponseLike) => reject(response));
       });
     });
 

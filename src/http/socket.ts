@@ -1,4 +1,4 @@
-import { Request } from './request'
+import { Request, ResponseLike } from './request'
 import WindowVisibility from '../util/window-visibility'
 import { isEmptyObject } from '../util/helpers'
 import {LocalStorage} from "../util/local-storage";
@@ -53,13 +53,13 @@ export class Socket {
     const self = this
     this.request = this.createRequest('POST', this.options.routes.connect)
     this.request
-      .success(function (xhr: XMLHttpRequest) {
-        const response = JSON.parse(xhr.responseText)
-        if (response.status !== 'success') {
+      .success(function (response: ResponseLike) {
+        const responseData = JSON.parse(response.responseText)
+        if (responseData.status !== 'success') {
           return
         }
 
-        self.lastRequestTime = response.time
+        self.lastRequestTime = responseData.time
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
@@ -195,14 +195,14 @@ export class Socket {
 
     request.setWithCredentials(this.options.withCredentials || false)
 
-    request.beforeSend(function (xhr: XMLHttpRequest) {
+    request.beforeSend(function (response: ResponseLike) {
       if (self.storage.get().id) {
-        xhr.setRequestHeader('X-Socket-ID', self.storage.get().id)
+        response.setRequestHeader('X-Socket-ID', self.storage.get().id)
       }
     })
 
-    request.success(function (xhr: XMLHttpRequest) {
-      const id = xhr.getResponseHeader('X-Socket-ID');
+    request.success(function (response: ResponseLike) {
+      const id = response.getResponseHeader('X-Socket-ID');
       if (id) {
         self.storage.set('id', self.id = id);
       }
@@ -230,13 +230,13 @@ export class Socket {
 
     this.request = this.createRequest('POST', this.options.routes.receive)
     this.request
-      .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
-      .fail((xhr: XMLHttpRequest) => {
+      .success((response: ResponseLike) => self.fireEvents(response.responseText))
+      .fail((response: ResponseLike) => {
         // Reconnect on expired token.
-        if (xhr.status === 401) {
+        if (response.status === 401) {
           try {
-            const response = JSON.parse(xhr.responseText);
-            if (response.data?.code === 'TOKEN_EXPIRED') {
+            const responseData = JSON.parse(response.responseText);
+            if (responseData.data?.code === 'TOKEN_EXPIRED') {
               // Save channels before disconnecting
               const channelsToResubscribe = Object.keys(this.channels);
               self.disconnect();
@@ -250,7 +250,7 @@ export class Socket {
           }
         }
         // https://github.com/supportpal/pollcast/issues/7
-        if (xhr.status === 404) {
+        if (response.status === 404) {
           for (const channel in this.channels) {
             self.subscribe(channel)
           }
