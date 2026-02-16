@@ -82,7 +82,7 @@ export class Request {
       signal: this.abortController.signal,
       keepalive: this.keepalive
     })
-      .then(async (fetchResponse) => {
+      .then((fetchResponse) => {
         if (fetchResponse.ok) {
           this.successCallbacks.forEach((cb) => cb(fetchResponse))
         } else {
