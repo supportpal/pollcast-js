@@ -198,6 +198,44 @@ describe('connect', () => {
     // Verify that the function returns the socket ID from localStorage
     expect(capturedHeaderFunction!()).toBe(socketId);
   })
+
+  it('returns null when socket-id is not in localStorage', () => {
+    let capturedHeaderFunction: (() => string | null) | null = null;
+
+    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
+    request.mockImplementation(() => createMockRequest({
+      setRequestHeader: jest.fn(function (this: Request, name: string, value: string | (() => string | null)) {
+        // Capture the function passed for X-Socket-ID header
+        if (name === 'X-Socket-ID' && typeof value === 'function') {
+          capturedHeaderFunction = value;
+        }
+        return this;
+      }),
+      success: jest.fn(function (this: Request, cb) {
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
+          headers: {
+            get: jest.fn().mockReturnValue(null),
+          },
+        })
+        cb(xhr)
+
+        return this
+      }),
+    }))
+
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
+
+    // Do NOT set socket ID in localStorage - testing the || null case
+    socket.connect()
+
+    // Verify that a function was passed to setRequestHeader
+    expect(capturedHeaderFunction).not.toBeNull();
+
+    // Verify that the function returns null when no socket ID in localStorage
+    expect(capturedHeaderFunction!()).toBe(null);
+  })
 })
 
 describe('poll', () => {
