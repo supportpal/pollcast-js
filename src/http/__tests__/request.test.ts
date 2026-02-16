@@ -134,6 +134,31 @@ describe('successful requests', () => {
     }))
   })
 
+  it('evaluates lazy header function and includes header when function returns string', () => {
+    const request = new Request('GET', 'some/url')
+    const headerFunc = jest.fn().mockReturnValue('token-123')
+    request.setRequestHeader('Authorization', headerFunc)
+    request.send()
+
+    expect(headerFunc).toHaveBeenCalledTimes(1)
+    expect(mockFetch).toHaveBeenCalledWith('some/url', expect.objectContaining({
+      headers: expect.objectContaining({
+        'Authorization': 'token-123'
+      })
+    }))
+  })
+
+  it('evaluates lazy header function and excludes header when function returns null', () => {
+    const request = new Request('GET', 'some/url')
+    const headerFunc = jest.fn().mockReturnValue(null)
+    request.setRequestHeader('Authorization', headerFunc)
+    request.send()
+
+    expect(headerFunc).toHaveBeenCalledTimes(1)
+    const fetchCall = mockFetch.mock.calls[0][1]
+    expect(fetchCall.headers).not.toHaveProperty('Authorization')
+  })
+
   it('sends request without data', () => {
     const request = new Request('GET', 'some/url')
     request.send()
