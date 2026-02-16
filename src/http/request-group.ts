@@ -10,12 +10,12 @@ export class RequestGroup {
   /**
    * Execute a callback after all requests have completed successfully.
    */
-  then(callback: (responses: XMLHttpRequest[]) => void, errorCallback: (error: XMLHttpRequest) => void = () => {}): void {
+  then(callback: (responses: Response[]) => void, errorCallback: (error: Response) => void = () => {}): void {
     const promises = this.requests.map((request) => {
-      return new Promise<XMLHttpRequest>((resolve, reject) => {
+      return new Promise<Response>((resolve, reject) => {
         request
-          .success((xhr: XMLHttpRequest) => resolve(xhr))
-          .fail((xhr: XMLHttpRequest) => reject(xhr));
+          .success((response: Response) => resolve(response))
+          .fail((response: Response) => reject(response));
       });
     });
 

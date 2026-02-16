@@ -1,37 +1,29 @@
 import { RequestGroup } from '../request-group';
 import { Request } from '../request';
 
-let open: any,
-  setRequestHeader: any,
-  send: any,
-  addEventListener: any,
-  abort: any,
-  xhr: any;
+let mockFetch: jest.Mock;
+
+// Helper to create a mock Response with clone support
+const createMockResponse = (config: any) => {
+  const response = {
+    ok: config.ok !== undefined ? config.ok : true,
+    status: config.status || 200,
+    text: jest.fn().mockResolvedValue(config.text || ''),
+    json: jest.fn().mockResolvedValue(config.json || {}),
+    headers: config.headers || new Map(),
+    clone: jest.fn()
+  }
+  // Make clone return a new instance with the same properties
+  response.clone.mockImplementation(() => createMockResponse(config))
+  return response
+}
 
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
 
-  open = jest.fn();
-  setRequestHeader = jest.fn();
-  send = jest.fn();
-  addEventListener = jest.fn();
-  abort = jest.fn();
-  xhr = {
-    open,
-    send,
-    setRequestHeader,
-    addEventListener,
-    abort,
-    withCredentials: false,
-    readyState: 4,
-    status: 200,
-  };
-
-  Object.defineProperty(window, 'XMLHttpRequest', {
-    writable: true,
-    value: jest.fn().mockImplementation(() => xhr),
-  });
+  mockFetch = jest.fn();
+  global.fetch = mockFetch;
 });
 
 describe('RequestGroup', () => {
@@ -43,7 +35,13 @@ describe('RequestGroup', () => {
   });
 
   it('executes callback after all requests succeed', async () => {
-    xhr.status = 200;
+    const headers = new Map();
+    mockFetch.mockResolvedValue(createMockResponse({
+      ok: true,
+      status: 200,
+      text: '',
+      headers
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
@@ -55,13 +53,20 @@ describe('RequestGroup', () => {
         expect(responses[1].status).toBe(200);
         resolve();
       });
-
-      addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
     });
+
+    // Wait for promises to resolve
+    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   it('executes error callback if any request fails', async () => {
-    xhr.status = 500;
+    const headers = new Map();
+    mockFetch.mockResolvedValue(createMockResponse({
+      ok: false,
+      status: 500,
+      text: '',
+      headers
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
@@ -69,28 +74,51 @@ describe('RequestGroup', () => {
     await expect(
       new Promise((resolve, reject) => {
         group.then(resolve, reject);
-        addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
       })
     ).rejects.toMatchObject({ status: 500 });
+
+    // Wait for promises to resolve
+    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   it('executes default error callback if any request fails', async () => {
-    xhr.status = 500;
+    const headers = new Map();
+    mockFetch.mockResolvedValue(createMockResponse({
+      ok: false,
+      status: 500,
+      text: '',
+      headers
+    }));
 
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
 
-    group.then(() => {});
+    // Should not throw when error callback is not provided (uses default)
+    expect(() => {
+      group.then(() => {});
+    }).not.toThrow();
 
-    addEventListener.mock.calls.forEach(([, callback]: [any, (...args: any[]) => void]) => callback());
+    // Wait for promises to resolve
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Verify requests were sent
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it('sends all requests in the group', () => {
+    const headers = new Map();
+    mockFetch.mockResolvedValue(createMockResponse({
+      ok: true,
+      status: 200,
+      text: '',
+      headers
+    }));
+
     const requests = [new Request('GET', '/'), new Request('POST', '/submit')];
     const group = new RequestGroup(requests);
 
     group.then(() => {}, () => {});
 
-    expect(send).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });

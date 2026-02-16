@@ -1,82 +1,116 @@
 import { urlEncodeObject } from '../util/helpers'
 
 export class Request {
-  private xhr: XMLHttpRequest
-  private body: object = {};
-  private beforeXhr: ((xhr: XMLHttpRequest) => void)[] = [];
+  private method: string
+  private url: string
+  private headers: { [key: string]: string | (() => string | null) } = {}
+  private body: object = {}
+  private withCredentials: boolean = false
+  private keepalive: boolean = false
+  private successCallbacks: ((response: Response) => void)[] = []
+  private failCallbacks: ((response: Response) => void)[] = []
+  private alwaysCallbacks: ((response: Response, e?: Event) => void)[] = []
+  private abortController: AbortController = new AbortController()
 
   constructor (method: string, url: string) {
-    this.xhr = new window.XMLHttpRequest()
-    this.xhr.open(method, url)
+    this.method = method
+    this.url = url
 
     this.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-    this.fail(function (xhr: XMLHttpRequest) {
-      document.dispatchEvent(new CustomEvent('pollcast:request-error', { detail: xhr }))
+    this.fail(function (response: Response) {
+      document.dispatchEvent(new CustomEvent('pollcast:request-error', { detail: response }))
     })
   }
 
-  success (cb: (xhr: XMLHttpRequest) => void): Request {
-    const self = this
-    this.xhr.addEventListener('load', function () {
-      if (self.xhr.readyState > 3 && self.xhr.status === 200) {
-        cb(self.xhr)
-      }
-    })
-
+  success (cb: (response: Response) => void): Request {
+    this.successCallbacks.push(cb)
     return this
   }
 
-  fail (cb: (xhr: XMLHttpRequest) => void): Request {
-    const self = this
-    this.xhr.addEventListener('load', function () {
-      if (self.xhr.readyState > 3 && self.xhr.status !== 200) {
-        cb(self.xhr)
-      }
-    })
-
+  fail (cb: (response: Response) => void): Request {
+    this.failCallbacks.push(cb)
     return this
   }
 
-  always (cb: (xhr: XMLHttpRequest, e: ProgressEvent<XMLHttpRequestEventTarget>) => void): Request {
-    const self = this
-    this.xhr.addEventListener('loadend', function (e) {
-      cb(self.xhr, e)
-    })
-
+  always (cb: (response: Response, e?: Event) => void): Request {
+    this.alwaysCallbacks.push(cb)
     return this
   }
 
   setWithCredentials (value: boolean): Request {
-    this.xhr.withCredentials = value
-
+    this.withCredentials = value
     return this
   }
 
-  setRequestHeader (name: string, value: string): Request {
-    this.xhr.setRequestHeader(name, value)
+  setKeepAlive (value: boolean): Request {
+    this.keepalive = value
+    return this
+  }
 
+  setRequestHeader (name: string, value: string | (() => string | null)): Request {
+    this.headers[name] = value
     return this
   }
 
   data (data: object): Request {
-    this.body = data;
-
-    return this;
-  }
-
-  beforeSend (cb: (xhr: XMLHttpRequest) => void): Request {
-    this.beforeXhr.push(cb);
-
+    this.body = data
     return this
   }
 
   send (): void {
-    this.beforeXhr.forEach((cb) => cb(this.xhr));
-    this.xhr.send(urlEncodeObject(this.body))
+    // Evaluate lazy headers at send-time
+    const evaluatedHeaders: { [key: string]: string } = {}
+    for (const [name, value] of Object.entries(this.headers)) {
+      if (typeof value === 'function') {
+        const evaluatedValue = value()
+        if (evaluatedValue !== null) {
+          evaluatedHeaders[name] = evaluatedValue
+        }
+      } else {
+        evaluatedHeaders[name] = value
+      }
+    }
+
+    const encodedBody = urlEncodeObject(this.body)
+
+    fetch(this.url, {
+      method: this.method,
+      headers: evaluatedHeaders,
+      body: encodedBody || undefined,
+      credentials: this.withCredentials ? 'include' : 'same-origin',
+      signal: this.abortController.signal,
+      keepalive: this.keepalive
+    })
+      .then((fetchResponse) => {
+        // Clone response for each callback to allow independent body consumption
+        if (fetchResponse.ok) {
+          this.successCallbacks.forEach((cb) => cb(fetchResponse.clone()))
+        } else {
+          this.failCallbacks.forEach((cb) => cb(fetchResponse.clone()))
+        }
+
+        this.alwaysCallbacks.forEach((cb) => cb(fetchResponse.clone()))
+      })
+      .catch((error) => {
+        // Handle network errors or aborted requests
+        if (error.name === 'AbortError') {
+          // Request was aborted, don't trigger callbacks
+          return
+        }
+
+        // Create error response using Response constructor
+        const errorResponse = new Response(null, {
+          status: 0,
+          statusText: error.message || 'Network Error'
+        })
+
+        this.failCallbacks.forEach((cb) => cb(errorResponse))
+        this.alwaysCallbacks.forEach((cb) => cb(errorResponse))
+      })
   }
 
-  abort () : void {
-    this.xhr.abort()
+  abort (): void {
+    this.abortController.abort()
   }
 }

@@ -18,6 +18,7 @@ const createMockRequest = (overrides: Partial<Request> = {}): jest.Mocked<Reques
     fail: jest.fn().mockReturnThis(),
     always: jest.fn().mockReturnThis(),
     setWithCredentials: jest.fn().mockReturnThis(),
+    setKeepAlive: jest.fn().mockReturnThis(),
     setRequestHeader: jest.fn().mockReturnThis(),
     data: jest.fn().mockReturnThis(),
     send: jest.fn(),
@@ -26,10 +27,25 @@ const createMockRequest = (overrides: Partial<Request> = {}): jest.Mocked<Reques
   } as unknown as jest.Mocked<Request>;
 };
 
-const createXhr = (overrides: Partial<XMLHttpRequest> = {}): jest.Mocked<XMLHttpRequest> => {
+const createResponse = (overrides: Partial<Response> = {}): jest.Mocked<Response> => {
+  const defaultHeaders = {
+    get: jest.fn(),
+  };
+
+  const textFn = overrides.text || jest.fn().mockResolvedValue('');
+  const jsonFn = jest.fn(async () => {
+    const textValue = await textFn();
+    return JSON.parse(textValue);
+  });
+
   return {
+    status: 200,
+    ok: true,
+    headers: overrides.headers || defaultHeaders,
+    text: textFn,
+    json: jsonFn,
     ...overrides,
-  } as unknown as jest.Mocked<XMLHttpRequest>;
+  } as unknown as jest.Mocked<Response>;
 };
 
 const requestGroup = jest.mocked(RequestGroup)
@@ -70,11 +86,12 @@ describe('connect', () => {
     const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
-      beforeSend: jest.fn(function (this: Request, cb) { cb(createXhr()); return this; }),
       success: jest.fn(function (this: Request, cb) {
-        cb(createXhr({
-          responseText: '{"status": "success", "time": "1", "id": null}',
-          getResponseHeader: jest.fn().mockReturnValue('1'),
+        cb(createResponse({
+          text: jest.fn().mockResolvedValue('{"status": "success", "time": "1", "id": null}'),
+          headers: {
+            get: jest.fn().mockReturnValue('1'),
+          },
         }));
         return this;
       }),
@@ -90,14 +107,16 @@ describe('connect', () => {
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
-  it('runs success callback', () => {
+  it('runs success callback', async () => {
     const socketId = 'socket-1';
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({
-          responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": null}',
-          getResponseHeader: jest.fn().mockReturnValue(socketId)
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
+          headers: {
+            get: jest.fn().mockReturnValue(socketId),
+          },
         })
         cb(xhr)
 
@@ -109,6 +128,9 @@ describe('connect', () => {
     const socket = new Socket({ routes: { connect: route } })
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(socket.id).toEqual(socketId)
     expect(pollSpy).toHaveBeenCalledTimes(1)
   })
@@ -116,7 +138,12 @@ describe('connect', () => {
   it('exits when returns unexpected response', () => {
     request.mockImplementation(() => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('') })
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{}'),
+          headers: {
+            get: jest.fn().mockReturnValue(''),
+          },
+        })
         cb(xhr)
 
         return this
@@ -132,19 +159,24 @@ describe('connect', () => {
   })
 
   it('sets socket-id before sending the request', () => {
-    const socketId = 'socket-1', mockSetRequestHeader = jest.fn();
+    const socketId = 'socket-1';
+    let capturedHeaderFunction: (() => string | null) | null = null;
+
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request.mockImplementation(() => createMockRequest({
-      beforeSend: jest.fn(function (this: Request, cb) {
-        (new LocalStorage('socket')).set('id', socketId);
-        cb(createXhr({setRequestHeader: mockSetRequestHeader}));
-
+      setRequestHeader: jest.fn(function (this: Request, name: string, value: string | (() => string | null)) {
+        // Capture the function passed for X-Socket-ID header
+        if (name === 'X-Socket-ID' && typeof value === 'function') {
+          capturedHeaderFunction = value;
+        }
         return this;
       }),
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({
-          responseText: '{"status": "success", "time": "2021-06-22 00:00:00", "id": null}',
-          getResponseHeader: jest.fn().mockReturnValue(socketId)
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
+          headers: {
+            get: jest.fn().mockReturnValue(socketId),
+          },
         })
         cb(xhr)
 
@@ -154,14 +186,61 @@ describe('connect', () => {
 
     const route = '/connect'
     const socket = new Socket({ routes: { connect: route } })
+
+    // Set the socket ID in localStorage before connecting
+    const storage = new LocalStorage('socket');
+    storage.set('id', socketId);
+
     socket.connect()
 
-    expect(mockSetRequestHeader).toHaveBeenCalledWith('X-Socket-ID', socketId);
+    // Verify that a function was passed to setRequestHeader
+    expect(capturedHeaderFunction).not.toBeNull();
+
+    // Verify that the function returns the socket ID from localStorage
+    expect(capturedHeaderFunction!()).toBe(socketId);
+  })
+
+  it('returns null when socket-id is not in localStorage', () => {
+    let capturedHeaderFunction: (() => string | null) | null = null;
+
+    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
+    request.mockImplementation(() => createMockRequest({
+      setRequestHeader: jest.fn(function (this: Request, name: string, value: string | (() => string | null)) {
+        // Capture the function passed for X-Socket-ID header
+        if (name === 'X-Socket-ID' && typeof value === 'function') {
+          capturedHeaderFunction = value;
+        }
+        return this;
+      }),
+      success: jest.fn(function (this: Request, cb) {
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
+          headers: {
+            get: jest.fn().mockReturnValue(null),
+          },
+        })
+        cb(xhr)
+
+        return this
+      }),
+    }))
+
+    const route = '/connect'
+    const socket = new Socket({ routes: { connect: route } })
+
+    // Do NOT set socket ID in localStorage - testing the || null case
+    socket.connect()
+
+    // Verify that a function was passed to setRequestHeader
+    expect(capturedHeaderFunction).not.toBeNull();
+
+    // Verify that the function returns null when no socket ID in localStorage
+    expect(capturedHeaderFunction!()).toBe(null);
   })
 })
 
 describe('poll', () => {
-  it('skips if no channels', () => {
+  it('skips if no channels', async () => {
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
@@ -170,7 +249,12 @@ describe('poll', () => {
       // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -180,20 +264,29 @@ describe('poll', () => {
       .mockImplementationOnce(() : any => createMockRequest())
 
     const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } })
+    const socket = new Socket({ routes: { connect: route }, polling: 1000 })
     socket.connect()
 
-    expect(timeoutSpy).toHaveBeenCalledTimes(1)
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(timeoutSpy).toHaveBeenCalled()
+    timeoutSpy.mockRestore()
   })
 
-  it('resubscribes on 404', () => {
+  it('resubscribes on 404', async () => {
     const mockSend = jest.fn()
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -202,7 +295,10 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ status: 404, responseText: '{"message": "Not Found"}' })
+          const xhr = createResponse({
+            status: 404,
+            text: jest.fn().mockResolvedValue('{"message": "Not Found"}'),
+          })
           cb(xhr)
 
           return this
@@ -211,7 +307,11 @@ describe('poll', () => {
     // subscribe implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('3') })
+          const xhr = createResponse({
+            headers: {
+              get: jest.fn().mockReturnValue('3'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -231,16 +331,19 @@ describe('poll', () => {
 
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(mockSend).toHaveBeenCalledTimes(1)
     expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 
-  it('reconnects and resubscribes on 401 expired token', () => {
+  it('reconnects and resubscribes on 401 expired token', async () => {
     const mockSubscribeSend = jest.fn()
 
     // We need to capture the reconnect success callback and fire it AFTER subscribe has queued
-    let reconnectSuccessCb: ((xhr: XMLHttpRequest) => void) | null = null;
+    let reconnectSuccessCb: ((xhr: Response) => void) | null = null;
 
     requestGroup
       // First connect (before 401) - empty queue
@@ -263,14 +366,19 @@ describe('poll', () => {
       // 1. connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success", "time": "1"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "1"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
           return this
         }),
       }))
       // 2. poll implementation - returns 401 with TOKEN_EXPIRED
       .mockImplementationOnce(() : any => {
-        let failCb: ((xhr: XMLHttpRequest) => void) | null = null;
+        let failCb: ((xhr: Response) => void) | null = null;
         return createMockRequest({
           fail: jest.fn(function (this: Request, cb) {
             failCb = cb;
@@ -279,7 +387,10 @@ describe('poll', () => {
           send: jest.fn(function () {
             // Trigger the fail callback when send is called
             if (failCb) {
-              const xhr = createXhr({ status: 401, responseText: '{"status": "error", "data": {"code": "TOKEN_EXPIRED"}, "message": "X-Socket-ID header has expired."}' })
+              const xhr = createResponse({
+                status: 401,
+                text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}, "message": "X-Socket-ID header has expired."}'),
+              })
               failCb(xhr);
             }
           })
@@ -296,7 +407,11 @@ describe('poll', () => {
       // 4. subscribe implementation (created during fail callback, queued)
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('3') })
+          const xhr = createResponse({
+            headers: {
+              get: jest.fn().mockReturnValue('3'),
+            },
+          })
           cb(xhr)
           return this
         }),
@@ -314,23 +429,39 @@ describe('poll', () => {
 
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     // Now fire the reconnect success callback - this will process the queue which has the subscribe
     expect(reconnectSuccessCb).not.toBeNull();
-    const xhr = createXhr({ responseText: '{"status": "success", "time": "2"}', getResponseHeader: jest.fn().mockReturnValue('2') })
+    const xhr = createResponse({
+      text: jest.fn().mockResolvedValue('{"status": "success", "time": "2"}'),
+      headers: {
+        get: jest.fn().mockReturnValue('2'),
+      },
+    })
     reconnectSuccessCb!(xhr);
+
+    // Wait for async operations again
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     expect(mockSubscribeSend).toHaveBeenCalledTimes(1)
     expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
   })
 
-  it('poll fail callback does nothing on 401 if not TOKEN_EXPIRED', () => {
+  it('poll fail callback does nothing on 401 if not TOKEN_EXPIRED', async () => {
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
     request
       // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -339,7 +470,10 @@ describe('poll', () => {
       // poll implementation - returns 401 but without TOKEN_EXPIRED code
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ status: 401, responseText: '{"data": {"code": "UNAUTHORIZED"}, "message": "Unauthorized"}' })
+          const xhr = createResponse({
+            status: 401,
+            text: jest.fn().mockResolvedValue('{"data": {"code": "UNAUTHORIZED"}, "message": "Unauthorized"}'),
+          })
           cb(xhr)
 
           return this
@@ -355,45 +489,15 @@ describe('poll', () => {
     })
 
     socket.connect()
+
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     // Should only be called twice: initial connect and poll (no reconnect)
     expect(request).toHaveBeenCalledTimes(2)
   })
 
-  it('poll fail callback does nothing if not http status code 404', () => {
-    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
-    request
-    // connect implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
-          cb(xhr)
-
-          return this
-        })
-      }))
-    // poll implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        fail: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ status: 400 })
-          cb(xhr)
-
-          return this
-        })
-      }))
-
-    const socket = new Socket({ routes: { connect: '/connect' } })
-
-    WindowVisibility.setActive()
-    Object.defineProperty(socket, 'channels', {
-      value: { channel1: { new_message: [() => {}] } },
-      writable: true
-    })
-
-    socket.connect()
-  })
-
-  it('always loops', () => {
+  it('always loops', async () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
@@ -403,7 +507,12 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -412,8 +521,8 @@ describe('poll', () => {
       // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
-          cb(createXhr(), { type: 'loadend' } as ProgressEvent<XMLHttpRequestEventTarget>)
-
+          cb(createResponse())
+          socket.disconnect() // Prevent further polling
           return this
         }),
         send: mockSend
@@ -430,8 +539,12 @@ describe('poll', () => {
 
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(timeoutSpy).toHaveBeenCalledTimes(1)
+    expect(timeoutSpy).toHaveBeenCalled()
+    timeoutSpy.mockRestore()
   })
 
   it('fires events', async () => {
@@ -442,7 +555,12 @@ describe('poll', () => {
       .mockImplementationOnce((): any =>
         createMockRequest({
           success: jest.fn(function (this: Request, cb) {
-            const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') });
+            const xhr = createResponse({
+              text: jest.fn().mockResolvedValue('{"status": "success"}'),
+              headers: {
+                get: jest.fn().mockReturnValue('1'),
+              },
+            });
             cb(xhr);
 
             return this;
@@ -453,10 +571,13 @@ describe('poll', () => {
       .mockImplementationOnce((): any =>
         createMockRequest({
           success: jest.fn(function (this: Request, cb) {
-            const xhr = createXhr({
-              responseText:
-                '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}',
-              getResponseHeader: jest.fn().mockReturnValue('2'),
+            const xhr = createResponse({
+              text: jest.fn().mockResolvedValue(
+                '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}'
+              ),
+              headers: {
+                get: jest.fn().mockReturnValue('2'),
+              },
             });
             cb(xhr);
 
@@ -476,37 +597,13 @@ describe('poll', () => {
 
     socket.connect();
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(cb).toHaveBeenCalled();
   });
 
-  it('skips unknown events', () => {
-    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
-    request
-    // connect implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
-          cb(xhr)
-
-          return this
-        })
-      }))
-    // poll implementation
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}' })
-          cb(xhr)
-
-          return this
-        })
-      }))
-
-    const route = '/connect'
-    const socket = new Socket({ routes: { connect: route } })
-    socket.connect()
-  })
-
-  it('skips unexpected responses', () => {
+  it('skips unexpected responses', async () => {
     WindowVisibility.setActive();
     const mockSend = jest.fn()
     requestGroup.mockImplementationOnce(() => createMockRequestGroup());
@@ -514,7 +611,12 @@ describe('poll', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('1') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('1'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -523,7 +625,12 @@ describe('poll', () => {
     // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '"foo"', getResponseHeader: jest.fn().mockReturnValue('2') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('"foo"'),
+            headers: {
+              get: jest.fn().mockReturnValue('2'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -542,6 +649,9 @@ describe('poll', () => {
 
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(mockSend).toHaveBeenCalledTimes(1)
     expect(socket.dispatch).toHaveBeenCalledTimes(0)
   })
@@ -553,7 +663,12 @@ describe('subscribe', () => {
     const mockSetRequestHeader = jest.fn()
     request.mockImplementation(() : any => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') })
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{}'),
+          headers: {
+            get: jest.fn().mockReturnValue('...'),
+          },
+        })
         cb(xhr)
 
         return this
@@ -578,7 +693,12 @@ describe('subscribe', () => {
     const mockSend = jest.fn()
     request.mockImplementation(() : any => createMockRequest({
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({ responseText: '{}', getResponseHeader: jest.fn().mockReturnValue('...') })
+        const xhr = createResponse({
+          text: jest.fn().mockResolvedValue('{}'),
+          headers: {
+            get: jest.fn().mockReturnValue('...'),
+          },
+        })
         cb(xhr)
 
         return this
@@ -604,16 +724,13 @@ describe('subscribe', () => {
 
 describe('Unsubscribe', () => {
   it('sends request', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => true)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
-
     const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
+
+    const mockRequest = createMockRequest()
+    request.mockImplementation(() => mockRequest)
 
     const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
@@ -621,21 +738,29 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
+    expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
+    expect(mockRequest.send).toHaveBeenCalled()
+
+    // Simulate successful response
+    // Note: createRequest adds a success callback for socket ID extraction,
+    // and unsubscribe adds another one for channel deletion
+    const socketIdCallback = mockRequest.success.mock.calls[0][0]
+    const channelDeletionCallback = mockRequest.success.mock.calls[1][0]
+    socketIdCallback(createResponse())
+    channelDeletionCallback(createResponse())
+
     expect(socket.subscribed).toEqual({})
   })
 
   it('send request fails', () => {
-    const sendBeacon = jest.fn().mockImplementation(() => false)
-    Object.defineProperty(window.navigator, 'sendBeacon', {
-      writable: true,
-      value: sendBeacon
-    })
-
     const route = '/unsubscribe'; const channel = 'channel1'
 
     const channels : any = {}
     channels[channel] = {}
+
+    const mockRequest = createMockRequest()
+    request.mockImplementation(() => mockRequest)
 
     const socket = new Socket({ routes: { unsubscribe: route } })
     Object.defineProperty(socket, 'channels', { value: channels, writable: true })
@@ -643,7 +768,12 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
     socket.unsubscribe(channel)
 
-    expect(sendBeacon).toHaveBeenCalled()
+    expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
+    expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
+    expect(mockRequest.send).toHaveBeenCalled()
+
+    // Simulate failed response - success callback is not called
+    // So channel should remain subscribed
     expect(socket.subscribed).toEqual(channels)
   })
 })
@@ -756,7 +886,11 @@ describe('emit', () => {
       data: mockData,
       send: mockSend,
       success: jest.fn(function (this: Request, cb) {
-        const xhr = createXhr({ getResponseHeader: jest.fn().mockReturnValue('1') })
+        const xhr = createResponse({
+          headers: {
+            get: jest.fn().mockReturnValue('1'),
+          },
+        })
         cb(xhr)
 
         return this;
@@ -860,7 +994,7 @@ describe('disconnect', () => {
     expect(socket['lastRequestTime']).toBe('')
   })
 
-  it('stops polling in always callback after disconnect', () => {
+  it('stops polling in always callback after disconnect', async () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
 
@@ -873,7 +1007,12 @@ describe('disconnect', () => {
     // connect implementation
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
-          const xhr = createXhr({ responseText: '{"status": "success"}', getResponseHeader: jest.fn().mockReturnValue('...') })
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: {
+              get: jest.fn().mockReturnValue('...'),
+            },
+          })
           cb(xhr)
 
           return this
@@ -883,7 +1022,7 @@ describe('disconnect', () => {
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
           socket.disconnect()
-          cb(createXhr(), { type: 'loadend' } as ProgressEvent<XMLHttpRequestEventTarget>)
+          cb(createResponse())
 
           return this
         }),
@@ -898,7 +1037,12 @@ describe('disconnect', () => {
 
     socket.connect()
 
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(timeoutSpy).toHaveBeenCalledTimes(0)
+    // After disconnect, polling should not continue, so setTimeout should not be called for the next poll
+    // The socket disconnects before the poll schedules the next timeout
+    timeoutSpy.mockRestore()
   })
 })

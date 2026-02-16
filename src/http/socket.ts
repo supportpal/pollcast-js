@@ -53,13 +53,13 @@ export class Socket {
     const self = this
     this.request = this.createRequest('POST', this.options.routes.connect)
     this.request
-      .success(function (xhr: XMLHttpRequest) {
-        const response = JSON.parse(xhr.responseText)
-        if (response.status !== 'success') {
+      .success(async function (response: Response) {
+        const responseData = await response.json()
+        if (responseData.status !== 'success') {
           return
         }
 
-        self.lastRequestTime = response.time
+        self.lastRequestTime = responseData.time
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
@@ -99,13 +99,13 @@ export class Socket {
    * Leave a channel.
    */
   unsubscribe (channel: string): void {
-    const data = {
-      channel_name: channel,
-    }
-
-    if ('sendBeacon' in navigator && navigator.sendBeacon(this.options.routes.unsubscribe, new URLSearchParams(data))) {
-      delete this.channels[channel]
-    }
+    const self = this
+    const request = this.createRequest('POST', this.options.routes.unsubscribe)
+    request
+      .setKeepAlive(true)
+      .data({channel_name: channel})
+      .success(() => delete self.channels[channel])
+      .send()
   }
 
   /**
@@ -195,14 +195,12 @@ export class Socket {
 
     request.setWithCredentials(this.options.withCredentials || false)
 
-    request.beforeSend(function (xhr: XMLHttpRequest) {
-      if (self.storage.get().id) {
-        xhr.setRequestHeader('X-Socket-ID', self.storage.get().id)
-      }
+    request.setRequestHeader('X-Socket-ID', function (){
+      return self.storage.get().id || null;
     })
 
-    request.success(function (xhr: XMLHttpRequest) {
-      const id = xhr.getResponseHeader('X-Socket-ID');
+    request.success(function (response: Response) {
+      const id = response.headers.get('X-Socket-ID');
       if (id) {
         self.storage.set('id', self.id = id);
       }
@@ -230,13 +228,13 @@ export class Socket {
 
     this.request = this.createRequest('POST', this.options.routes.receive)
     this.request
-      .success((xhr: XMLHttpRequest) => self.fireEvents(xhr.responseText))
-      .fail((xhr: XMLHttpRequest) => {
+      .success(async (response: Response) => self.fireEvents(response))
+      .fail(async (response: Response) => {
         // Reconnect on expired token.
-        if (xhr.status === 401) {
+        if (response.status === 401) {
           try {
-            const response = JSON.parse(xhr.responseText);
-            if (response.data?.code === 'TOKEN_EXPIRED') {
+            const responseData = await response.json();
+            if (responseData.data?.code === 'TOKEN_EXPIRED') {
               // Save channels before disconnecting
               const channelsToResubscribe = Object.keys(this.channels);
               self.disconnect();
@@ -250,7 +248,7 @@ export class Socket {
           }
         }
         // https://github.com/supportpal/pollcast/issues/7
-        if (xhr.status === 404) {
+        if (response.status === 404) {
           for (const channel in this.channels) {
             self.subscribe(channel)
           }
@@ -270,16 +268,16 @@ export class Socket {
       .send()
   }
 
-  private fireEvents (response: any): void {
-    response = JSON.parse(response)
-    if (response.status !== 'success') {
+  private async fireEvents (response: Response): Promise<void> {
+    const data = await response.json()
+    if (data.status !== 'success') {
       return
     }
 
-    this.lastRequestTime = response.time
+    this.lastRequestTime = data.time
 
-    Object.keys(response.events).forEach((event) => {
-      const item = response.events[event]
+    Object.keys(data.events).forEach((event) => {
+      const item = data.events[event]
       this.dispatch(item.channel.name, item.event, item.payload)
     })
   }
