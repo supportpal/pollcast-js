@@ -272,6 +272,64 @@ describe('the setWithCredentials method in the Request class', () => {
   })
 })
 
+describe('the setKeepAlive method in the Request class', () => {
+  let req: Request
+
+  beforeEach(() => {
+    const headers = new Map()
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: jest.fn().mockResolvedValue(''),
+      headers
+    })
+    req = new Request('GET', '/')
+  })
+
+  test('sets keepalive to true when setKeepAlive is called with true', () => {
+    req.setKeepAlive(true)
+    req.send()
+    expect(mockFetch).toHaveBeenCalledWith('/', expect.objectContaining({
+      keepalive: true
+    }))
+  })
+
+  test('sets keepalive to false when setKeepAlive is called with false', () => {
+    req.setKeepAlive(false)
+    req.send()
+    expect(mockFetch).toHaveBeenCalledWith('/', expect.objectContaining({
+      keepalive: false
+    }))
+  })
+
+  test('keepalive defaults to false when setKeepAlive is not called', () => {
+    req.send()
+    expect(mockFetch).toHaveBeenCalledWith('/', expect.objectContaining({
+      keepalive: false
+    }))
+  })
+
+  test('returns the Request instance for method chaining', () => {
+    const returnedReq = req.setKeepAlive(true)
+
+    expect(returnedReq).toBeInstanceOf(Request)
+  })
+
+  test('can be chained with other methods', () => {
+    req
+      .setKeepAlive(true)
+      .setWithCredentials(true)
+      .data({ test: 'value' })
+      .send()
+
+    expect(mockFetch).toHaveBeenCalledWith('/', expect.objectContaining({
+      keepalive: true,
+      credentials: 'include',
+      body: 'test=value'
+    }))
+  })
+})
+
 describe('network errors', () => {
   beforeEach(() => {
     // Reset mockFetch to not have any default implementation
