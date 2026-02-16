@@ -107,9 +107,9 @@ export class Request {
           responseText: responseText,
           readyState: 4,
           getResponseHeader: (name: string) => responseHeaders[name.toLowerCase()] || null,
-          setRequestHeader: () => {
-            // No-op: headers cannot be modified after request completion
-          }
+          // No-op: headers cannot be modified after request completion
+          // (unlike beforeSend callbacks where setRequestHeader modifies this.headers)
+          setRequestHeader: () => {}
         }
 
         if (fetchResponse.ok) {
@@ -133,9 +133,8 @@ export class Request {
           responseText: '',
           readyState: 4,
           getResponseHeader: () => null,
-          setRequestHeader: () => {
-            // No-op: headers cannot be modified after request completion
-          }
+          // No-op: headers cannot be modified after request completion
+          setRequestHeader: () => {}
         }
 
         this.response = errorResponse
