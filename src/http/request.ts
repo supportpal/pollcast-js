@@ -107,8 +107,8 @@ export class Request {
           responseText: responseText,
           readyState: 4,
           getResponseHeader: (name: string) => responseHeaders[name.toLowerCase()] || null,
-          setRequestHeader: (name: string, value: string) => {
-            this.headers[name] = value
+          setRequestHeader: () => {
+            // No-op: headers cannot be modified after request completion
           }
         }
 
@@ -133,8 +133,8 @@ export class Request {
           responseText: '',
           readyState: 4,
           getResponseHeader: () => null,
-          setRequestHeader: (name: string, value: string) => {
-            this.headers[name] = value
+          setRequestHeader: () => {
+            // No-op: headers cannot be modified after request completion
           }
         }
 
