@@ -271,3 +271,140 @@ describe('the setWithCredentials method in the Request class', () => {
     expect(returnedReq).toBeInstanceOf(Request)
   })
 })
+
+describe('network errors', () => {
+  beforeEach(() => {
+    // Reset mockFetch to not have any default implementation
+    mockFetch.mockReset()
+  })
+
+  it('triggers fail and always callbacks on network error', async () => {
+    const failCallback = jest.fn()
+    const alwaysCallback = jest.fn()
+    const successCallback = jest.fn()
+
+    // Mock a network error
+    mockFetch.mockRejectedValue(new Error('Network Error'))
+
+    const request = new Request('GET', 'some/url')
+    request
+      .success(successCallback)
+      .fail(failCallback)
+      .always(alwaysCallback)
+      .send()
+
+    // Wait for fetch promise to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(successCallback).not.toHaveBeenCalled()
+    expect(failCallback).toHaveBeenCalledTimes(1)
+    expect(alwaysCallback).toHaveBeenCalledTimes(1)
+
+    // Verify error response structure
+    const errorResponse = failCallback.mock.calls[0][0]
+    expect(errorResponse).toBeInstanceOf(Response)
+    expect(errorResponse.status).toBe(0)
+    expect(errorResponse.statusText).toBe('Network Error')
+  })
+
+  it('handles network error without message', async () => {
+    const failCallback = jest.fn()
+
+    // Mock a network error without message
+    const error = new Error()
+    error.message = ''
+    mockFetch.mockRejectedValue(error)
+
+    const request = new Request('GET', 'some/url')
+    request.fail(failCallback).send()
+
+    // Wait for fetch promise to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(failCallback).toHaveBeenCalledTimes(1)
+    const errorResponse = failCallback.mock.calls[0][0]
+    expect(errorResponse.status).toBe(0)
+    expect(errorResponse.statusText).toBe('Network Error')
+  })
+
+  it('dispatches pollcast:request-error event on network error', async () => {
+    const eventPromise = new Promise<CustomEvent>((resolve) => {
+      const handler = (e: Event) => {
+        document.removeEventListener('pollcast:request-error', handler);
+        resolve(e as CustomEvent);
+      };
+      document.addEventListener('pollcast:request-error', handler);
+    });
+
+    // Mock a network error
+    mockFetch.mockRejectedValue(new Error('Connection failed'))
+
+    const request = new Request('GET', 'some/url')
+    request.send()
+
+    // Wait for fetch promise to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    const event = await eventPromise
+    expect(event.detail).toBeInstanceOf(Response)
+    expect(event.detail.status).toBe(0)
+    expect(event.detail.statusText).toBe('Connection failed')
+  })
+})
+
+describe('aborted requests', () => {
+  beforeEach(() => {
+    // Reset mockFetch to not have any default implementation
+    mockFetch.mockReset()
+  })
+
+  it('does not trigger callbacks when request is aborted', async () => {
+    const successCallback = jest.fn()
+    const failCallback = jest.fn()
+    const alwaysCallback = jest.fn()
+
+    // Mock an abort error
+    const abortError = new Error('The operation was aborted')
+    abortError.name = 'AbortError'
+    mockFetch.mockRejectedValue(abortError)
+
+    const request = new Request('GET', 'some/url')
+    request
+      .success(successCallback)
+      .fail(failCallback)
+      .always(alwaysCallback)
+      .send()
+
+    // Wait for fetch promise to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // No callbacks should be triggered for aborted requests
+    expect(successCallback).not.toHaveBeenCalled()
+    expect(failCallback).not.toHaveBeenCalled()
+    expect(alwaysCallback).not.toHaveBeenCalled()
+  })
+
+  it('does not dispatch event when request is aborted', async () => {
+    let eventDispatched = false
+    const handler = () => {
+      eventDispatched = true
+    }
+    document.addEventListener('pollcast:request-error', handler)
+
+    // Mock an abort error
+    const abortError = new Error('The operation was aborted')
+    abortError.name = 'AbortError'
+    mockFetch.mockRejectedValue(abortError)
+
+    const request = new Request('GET', 'some/url')
+    request.send()
+
+    // Wait for fetch promise to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(eventDispatched).toBe(false)
+
+    document.removeEventListener('pollcast:request-error', handler)
+  })
+})
+
