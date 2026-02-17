@@ -9,7 +9,7 @@ export class Request {
   private keepalive: boolean = false
   private successCallbacks: ((response: Response) => void)[] = []
   private failCallbacks: ((response: Response) => void)[] = []
-  private alwaysCallbacks: ((response: Response, e?: Event) => void)[] = []
+  private alwaysCallbacks: (() => void)[] = []
   private abortController: AbortController = new AbortController()
 
   constructor (method: string, url: string) {
@@ -33,7 +33,7 @@ export class Request {
     return this
   }
 
-  always (cb: (response: Response, e?: Event) => void): Request {
+  always (cb: () => void): Request {
     this.alwaysCallbacks.push(cb)
     return this
   }
@@ -90,7 +90,7 @@ export class Request {
           this.failCallbacks.forEach((cb) => cb(fetchResponse.clone()))
         }
 
-        this.alwaysCallbacks.forEach((cb) => cb(fetchResponse.clone()))
+        this.alwaysCallbacks.forEach((cb) => cb())
       })
       .catch((error) => {
         // Handle network errors or aborted requests
@@ -106,7 +106,7 @@ export class Request {
         })
 
         this.failCallbacks.forEach((cb) => cb(errorResponse))
-        this.alwaysCallbacks.forEach((cb) => cb(errorResponse))
+        this.alwaysCallbacks.forEach((cb) => cb())
       })
   }
 
