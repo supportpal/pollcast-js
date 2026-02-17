@@ -1,3 +1,13 @@
+## [3.0.0](https://github.com/supportpal/pollcast-js/compare/v2.2.4...v3.0.0) (2026-02-17)
+
+### ⚠ BREAKING CHANGES
+
+* replace XMLHttpRequest with fetch API (#630)
+
+### Features
+
+* replace XMLHttpRequest with fetch API ([#630](https://github.com/supportpal/pollcast-js/issues/630)) ([e82e729](https://github.com/supportpal/pollcast-js/commit/e82e7290865aa75067372688ed3f871f503e5b36))
+
 ## [2.2.4](https://github.com/supportpal/pollcast-js/compare/v2.2.3...v2.2.4) (2026-02-16)
 
 
