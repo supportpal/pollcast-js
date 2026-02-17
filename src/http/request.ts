@@ -93,19 +93,7 @@ export class Request {
         this.alwaysCallbacks.forEach((cb) => cb())
       })
       .catch((error) => {
-        // Handle network errors or aborted requests
-        if (error.name === 'AbortError') {
-          // Request was aborted, don't trigger callbacks
-          return
-        }
-
-        // Create error response using Response constructor
-        const errorResponse = new Response(null, {
-          status: 0,
-          statusText: error.message || 'Network Error'
-        })
-
-        this.failCallbacks.forEach((cb) => cb(errorResponse))
+        console.error('Pollcast request error.', error);
         this.alwaysCallbacks.forEach((cb) => cb())
       })
   }
