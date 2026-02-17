@@ -1,3 +1,9 @@
+## [3.0.1](https://github.com/supportpal/pollcast-js/compare/v3.0.0...v3.0.1) (2026-02-17)
+
+### Bug Fixes
+
+* don't trigger failCallback on network errors ([329ae56](https://github.com/supportpal/pollcast-js/commit/329ae561c2b743197689ad78c2faf587eaa4b2ff))
+
 ## [3.0.0](https://github.com/supportpal/pollcast-js/compare/v2.2.4...v3.0.0) (2026-02-17)
 
 ### ⚠ BREAKING CHANGES
