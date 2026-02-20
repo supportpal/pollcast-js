@@ -49,7 +49,7 @@ export class Socket {
   /**
    * Connect to the server, start xhr-polling.
    */
-  connect (): void {
+  connect (lastRequestTimeOverride: string = ''): void {
     const self = this
     this.request = this.createRequest('POST', this.options.routes.connect)
     this.request
@@ -59,7 +59,7 @@ export class Socket {
           return
         }
 
-        self.lastRequestTime = responseData.time
+        self.lastRequestTime = lastRequestTimeOverride !== '' ? lastRequestTimeOverride : responseData.time
 
         const group = new RequestGroup(self.requestQueue);
         group.then(() => self.poll());
@@ -74,7 +74,7 @@ export class Socket {
   /**
    * Join a channel.
    */
-  subscribe (channel: string): void {
+  subscribe (channel: string, retrying: boolean = false): void {
     if (!Object.hasOwnProperty.call(this.channels, channel)) {
       this.channels[channel] = {};
     }
@@ -88,6 +88,10 @@ export class Socket {
       channel_name: channel,
     })
 
+    if (!retrying) {
+      request.fail(async (response: Response) => this.handleTokenExpired(response))
+    }
+
     if (this.lastRequestTime !== '') {
       request.send();
     } else {
@@ -98,14 +102,21 @@ export class Socket {
   /**
    * Leave a channel.
    */
-  unsubscribe (channel: string): void {
+  unsubscribe (channel: string, retrying: boolean = false): void {
     const self = this
     const request = this.createRequest('POST', this.options.routes.unsubscribe)
     request
       .setKeepAlive(true)
       .data({channel_name: channel})
       .success(() => delete self.channels[channel])
-      .send()
+
+    if (!retrying) {
+      request.fail(async (response: Response) => this.handleTokenExpired(response, () => {
+        self.unsubscribe(channel, true);
+      }))
+    }
+
+    request.send()
   }
 
   /**
@@ -143,14 +154,24 @@ export class Socket {
   /**
    * Publish a message from the client to the server.
    */
-  emit (channel: string, event: string, data: any): void {
+  emit (channel: string, event: string, data: any, retrying: boolean = false): void {
+    const self = this
     const request = this.createRequest('POST', this.options.routes.publish)
-    request
-      .data({
-        channel_name: channel,
-        event,
-        data,
-      })
+    request.data({
+      channel_name: channel,
+      event,
+      data,
+    })
+
+    if (!retrying) {
+      request.fail(async (response: Response) => this.handleTokenExpired(response, () => {
+        // Resubscribe all channels, then re-queue the publish so it runs after reconnect
+        for (const ch of Object.keys(self.channels)) {
+          self.subscribe(ch, true);
+        }
+        self.emit(channel, event, data, true);
+      }))
+    }
 
     if (this.lastRequestTime !== '') {
       request.send();
@@ -187,6 +208,47 @@ export class Socket {
     for (let i = 0; i < events.length; i++) {
       events[i](data)
     }
+  }
+
+  /**
+   * Handle a 401 response with a TOKEN_EXPIRED code by disconnecting, reconnecting,
+   * and then executing afterReconnect (defaults to resubscribing all channels).
+   * The saved lastRequestTime is preserved so the next poll fetches messages
+   * since the last successful poll.
+   *
+   * @returns true if the response was a TOKEN_EXPIRED error and was handled.
+   */
+  private async handleTokenExpired (response: Response, afterReconnect?: () => void): Promise<boolean> {
+    if (response.status !== 401) {
+      return false;
+    }
+
+    try {
+      const responseData = await response.json();
+      if (responseData.data?.code !== 'TOKEN_EXPIRED') {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    // Save channels and lastRequestTime before disconnecting
+    const channelsToResubscribe = Object.keys(this.channels);
+    const savedLastRequestTime = this.lastRequestTime;
+
+    this.disconnect();
+    // Pass savedLastRequestTime so the next poll fetches messages since the last successful poll
+    this.connect(savedLastRequestTime);
+
+    if (afterReconnect) {
+      afterReconnect();
+    } else {
+      for (const channel of channelsToResubscribe) {
+        this.subscribe(channel, true);
+      }
+    }
+
+    return true;
   }
 
   private createRequest (method: string, url: string): Request {
@@ -231,21 +293,8 @@ export class Socket {
       .success(async (response: Response) => self.fireEvents(response))
       .fail(async (response: Response) => {
         // Reconnect on expired token.
-        if (response.status === 401) {
-          try {
-            const responseData = await response.json();
-            if (responseData.data?.code === 'TOKEN_EXPIRED') {
-              // Save channels before disconnecting
-              const channelsToResubscribe = Object.keys(this.channels);
-              self.disconnect();
-              self.connect();
-              for (const _channel of channelsToResubscribe) {
-                self.subscribe(_channel);
-              }
-            }
-          } catch (_e) {
-            // If we can't parse the response, ignore the error
-          }
+        if (await this.handleTokenExpired(response)) {
+          return;
         }
         // https://github.com/supportpal/pollcast/issues/7
         if (response.status === 404) {
