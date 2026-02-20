@@ -27,10 +27,25 @@ const createMockRequest = (overrides: Partial<Request> = {}): jest.Mocked<Reques
   } as unknown as jest.Mocked<Request>;
 };
 
-const createResponse = (overrides: Partial<Response> = {}): jest.Mocked<Response> => {
-  const defaultHeaders = {
+const createHeaders = (overrides: Partial<Headers> = {}): jest.Mocked<Headers> => {
+  return {
     get: jest.fn(),
-  };
+    append: jest.fn(),
+    delete: jest.fn(),
+    getSetCookie: jest.fn(),
+    has: jest.fn(),
+    set: jest.fn(),
+    forEach: jest.fn(),
+    entries: jest.fn(),
+    keys: jest.fn(),
+    values: jest.fn(),
+    [Symbol.iterator]: jest.fn(),
+    ...overrides,
+  } as unknown as jest.Mocked<Headers>;
+};
+
+const createResponse = (overrides: Partial<Response> = {}): jest.Mocked<Response> => {
+  const defaultHeaders = createHeaders();
 
   const textFn = overrides.text || jest.fn().mockResolvedValue('');
   const jsonFn = jest.fn(async () => {
@@ -89,9 +104,7 @@ describe('connect', () => {
       success: jest.fn(function (this: Request, cb) {
         cb(createResponse({
           text: jest.fn().mockResolvedValue('{"status": "success", "time": "1", "id": null}'),
-          headers: {
-            get: jest.fn().mockReturnValue('1'),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
         }));
         return this;
       }),
@@ -114,9 +127,7 @@ describe('connect', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
-          headers: {
-            get: jest.fn().mockReturnValue(socketId),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue(socketId) }),
         })
         cb(xhr)
 
@@ -140,9 +151,7 @@ describe('connect', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{}'),
-          headers: {
-            get: jest.fn().mockReturnValue(''),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue('') }),
         })
         cb(xhr)
 
@@ -174,9 +183,7 @@ describe('connect', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
-          headers: {
-            get: jest.fn().mockReturnValue(socketId),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue(socketId) }),
         })
         cb(xhr)
 
@@ -215,9 +222,7 @@ describe('connect', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{"status": "success", "time": "2021-06-22 00:00:00", "id": null}'),
-          headers: {
-            get: jest.fn().mockReturnValue(null),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue(null) }),
         })
         cb(xhr)
 
@@ -251,9 +256,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
 
@@ -283,9 +286,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
 
@@ -308,9 +309,7 @@ describe('poll', () => {
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
-            headers: {
-              get: jest.fn().mockReturnValue('3'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('3') }),
           })
           cb(xhr)
 
@@ -368,9 +367,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success", "time": "1"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
           return this
@@ -408,9 +405,7 @@ describe('poll', () => {
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
-            headers: {
-              get: jest.fn().mockReturnValue('3'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('3') }),
           })
           cb(xhr)
           return this
@@ -436,9 +431,7 @@ describe('poll', () => {
     expect(reconnectSuccessCb).not.toBeNull();
     const xhr = createResponse({
       text: jest.fn().mockResolvedValue('{"status": "success", "time": "2"}'),
-      headers: {
-        get: jest.fn().mockReturnValue('2'),
-      },
+      headers: createHeaders({ get: jest.fn().mockReturnValue('2') }),
     })
     reconnectSuccessCb!(xhr);
 
@@ -448,6 +441,8 @@ describe('poll', () => {
     expect(mockSubscribeSend).toHaveBeenCalledTimes(1)
     expect(request).toHaveBeenCalledWith('POST', subscribeRoute)
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
+    // lastRequestTime from the first poll ("1") should be preserved after the reconnect
+    expect(socket['lastRequestTime']).toBe('1')
   })
 
   it('poll fail callback does nothing on 401 if not TOKEN_EXPIRED', async () => {
@@ -458,9 +453,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
 
@@ -497,6 +490,83 @@ describe('poll', () => {
     expect(request).toHaveBeenCalledTimes(2)
   })
 
+  it('does not loop if the resubscribe after poll 401 TOKEN_EXPIRED also receives a 401', async () => {
+    requestGroup
+      // First connect - empty queue
+      .mockImplementationOnce(() => createMockRequestGroup())
+      // Second connect (after 401 reconnect) - processes the queued subscribe
+      .mockImplementationOnce((requests: any[]) => {
+        return createMockRequestGroup({
+          then: jest.fn(function (cb) {
+            while (requests.length > 0) {
+              requests.shift()?.send();
+            }
+            cb([]);
+          })
+        });
+      });
+
+    const token401Response = () => createResponse({
+      status: 401,
+      text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+    })
+
+    request
+      // 1. connect
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t1"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-1') }),
+          }))
+          return this
+        }),
+      }))
+      // 2. poll - returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+      }))
+      // 3. Reconnect connect - fire success immediately
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t2"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+          }))
+          return this
+        }),
+      }))
+      // 4. Retry subscribe (retrying=true) - also returns 401 TOKEN_EXPIRED, no fail handler attached
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+        send: jest.fn(),
+      }))
+      // 5. Second poll after reconnect - plain mock, no 401
+      .mockImplementationOnce(() : any => createMockRequest())
+
+    const socket = new Socket({ routes: { connect: '/connect', subscribe: '/subscribe', receive: '/receive' } })
+
+    WindowVisibility.setActive()
+    socket['channels'] = { channel1: { new_message: [() => {}] } }
+
+    socket.connect()
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // 5 requests: connect + poll + reconnect connect + retry subscribe + second poll.
+    // No further reconnects despite the retry subscribe also getting 401.
+    expect(request).toHaveBeenCalledTimes(5)
+    expect(request).toHaveBeenCalledWith('POST', '/connect')
+    expect(request).toHaveBeenCalledWith('POST', '/receive')
+    expect(request).toHaveBeenCalledWith('POST', '/subscribe')
+  })
+
   it('always loops', async () => {
     const mockSend = jest.fn()
     const timeoutSpy = jest.spyOn(window, 'setTimeout')
@@ -509,9 +579,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
 
@@ -521,8 +589,8 @@ describe('poll', () => {
       // poll implementation
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
-          cb(createResponse())
-          socket.disconnect() // Prevent further polling
+          socket.disconnect() // Disconnect first so id is '' when always callback checks
+          cb()
           return this
         }),
         send: mockSend
@@ -557,9 +625,7 @@ describe('poll', () => {
           success: jest.fn(function (this: Request, cb) {
             const xhr = createResponse({
               text: jest.fn().mockResolvedValue('{"status": "success"}'),
-              headers: {
-                get: jest.fn().mockReturnValue('1'),
-              },
+              headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
             });
             cb(xhr);
 
@@ -575,9 +641,7 @@ describe('poll', () => {
               text: jest.fn().mockResolvedValue(
                 '{"status": "success", "time": "2021-06-21 00:00:00", "events": [{"event": "new_message", "channel": {"name": "channel1"}}]}'
               ),
-              headers: {
-                get: jest.fn().mockReturnValue('2'),
-              },
+              headers: createHeaders({ get: jest.fn().mockReturnValue('2') }),
             });
             cb(xhr);
 
@@ -613,9 +677,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('1'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
           })
           cb(xhr)
 
@@ -627,9 +689,7 @@ describe('poll', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('"foo"'),
-            headers: {
-              get: jest.fn().mockReturnValue('2'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('2') }),
           })
           cb(xhr)
 
@@ -665,9 +725,7 @@ describe('subscribe', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{}'),
-          headers: {
-            get: jest.fn().mockReturnValue('...'),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue('...') }),
         })
         cb(xhr)
 
@@ -695,9 +753,7 @@ describe('subscribe', () => {
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
           text: jest.fn().mockResolvedValue('{}'),
-          headers: {
-            get: jest.fn().mockReturnValue('...'),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue('...') }),
         })
         cb(xhr)
 
@@ -719,6 +775,162 @@ describe('subscribe', () => {
 
     expect(request).toHaveBeenCalledTimes(1)
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
+  })
+
+  it('reconnects and resubscribes on 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+    let reconnectSuccessCb: ((xhr: Response) => void) | null = null;
+    const mockSubscribeSend = jest.fn()
+
+    requestGroup
+      // Second connect (after 401 reconnect) - has subscribe in queue
+      .mockImplementationOnce((requests: any[]) => {
+        return createMockRequestGroup({
+          then: jest.fn(function (cb) {
+            while (requests.length > 0) {
+              requests.shift()?.send();
+            }
+            cb([]);
+          })
+        });
+      });
+
+    request
+      // 1. subscribe that returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          const xhr = createResponse({
+            status: 401,
+            text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+          })
+          cb(xhr)
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request - hold success callback
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          reconnectSuccessCb = cb;
+          return this
+        }),
+      }))
+      // 3. Subscribe queued during reconnect
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
+          return this
+        }),
+        send: mockSubscribeSend,
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    const cb = () => {}
+    socket['channels'] = { channel1: { new_message: [cb] } }
+
+    socket.subscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Fire the reconnect success callback
+    expect(reconnectSuccessCb).not.toBeNull()
+    reconnectSuccessCb!(createResponse({
+      text: jest.fn().mockResolvedValue('{"status": "success", "time": "new-time"}'),
+      headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+    }))
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(mockSubscribeSend).toHaveBeenCalledTimes(1)
+    expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
+    // lastRequestTime should be preserved from before the disconnect
+    expect(socket['lastRequestTime']).toBe('2021-06-22 00:00:00')
+    pollSpy.mockRestore()
+  })
+
+  it('ignores 401 that is not TOKEN_EXPIRED', async () => {
+    request.mockImplementation(() : any => createMockRequest({
+      fail: jest.fn(function (this: Request, cb) {
+        const xhr = createResponse({
+          status: 401,
+          text: jest.fn().mockResolvedValue('{"data": {"code": "UNAUTHORIZED"}}'),
+        })
+        cb(xhr)
+        return this
+      }),
+    }))
+
+    const socket = new Socket({ routes: { subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {} }
+
+    socket.subscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Should only create the one subscribe request, no reconnect
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not loop if the retry also receives a 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+
+    requestGroup.mockImplementationOnce((requests: any[]) => {
+      return createMockRequestGroup({
+        then: jest.fn(function (cb) {
+          while (requests.length > 0) {
+            requests.shift()?.send();
+          }
+          cb([]);
+        })
+      });
+    });
+
+    const token401Response = () => createResponse({
+      status: 401,
+      text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+    })
+
+    request
+      // 1. First subscribe returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request - fire success immediately
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t2"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+          }))
+          return this
+        }),
+      }))
+      // 3. Retry subscribe (retrying=true) - also returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+        send: jest.fn(),
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {} }
+
+    socket.subscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Only 3 requests: first subscribe + reconnect connect + retry subscribe. No further reconnects.
+    expect(request).toHaveBeenCalledTimes(3)
+    expect(request).toHaveBeenCalledWith('POST', '/subscribe')
+    expect(request).toHaveBeenCalledWith('POST', '/connect')
+    pollSpy.mockRestore()
   })
 })
 
@@ -775,6 +987,161 @@ describe('Unsubscribe', () => {
     // Simulate failed response - success callback is not called
     // So channel should remain subscribed
     expect(socket.subscribed).toEqual(channels)
+  })
+
+  it('reconnects and re-runs unsubscribe on 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+    let reconnectSuccessCb: ((xhr: Response) => void) | null = null;
+    const mockUnsubscribeSend = jest.fn()
+
+    requestGroup
+      .mockImplementationOnce((requests: any[]) => {
+        return createMockRequestGroup({
+          then: jest.fn(function (cb) {
+            while (requests.length > 0) {
+              requests.shift()?.send();
+            }
+            cb([]);
+          })
+        });
+      });
+
+    request
+      // 1. unsubscribe returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          const xhr = createResponse({
+            status: 401,
+            text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+          })
+          cb(xhr)
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          reconnectSuccessCb = cb;
+          return this
+        }),
+      }))
+      // 3. Unsubscribe re-run after reconnect (queued)
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
+          return this
+        }),
+        send: mockUnsubscribeSend,
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', unsubscribe: '/unsubscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    const cb = () => {}
+    socket['channels'] = { channel1: { new_message: [cb] } }
+
+    socket.unsubscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(reconnectSuccessCb).not.toBeNull()
+    reconnectSuccessCb!(createResponse({
+      text: jest.fn().mockResolvedValue('{"status": "success", "time": "new-time"}'),
+      headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+    }))
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Should have called unsubscribe again (not subscribe)
+    expect(mockUnsubscribeSend).toHaveBeenCalledTimes(1)
+    expect(request).toHaveBeenCalledWith('POST', '/unsubscribe')
+    expect(request).not.toHaveBeenCalledWith('POST', '/subscribe')
+    expect(socket['lastRequestTime']).toBe('2021-06-22 00:00:00')
+    pollSpy.mockRestore()
+  })
+
+  it('ignores 401 that is not TOKEN_EXPIRED', async () => {
+    request.mockImplementation(() : any => createMockRequest({
+      fail: jest.fn(function (this: Request, cb) {
+        const xhr = createResponse({
+          status: 401,
+          text: jest.fn().mockResolvedValue('{"data": {"code": "UNAUTHORIZED"}}'),
+        })
+        cb(xhr)
+        return this
+      }),
+    }))
+
+    const socket = new Socket({ routes: { unsubscribe: '/unsubscribe' } })
+    socket['channels'] = { channel1: {} }
+
+    socket.unsubscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Only the one unsubscribe request, no reconnect
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not loop if the retry also receives a 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+
+    requestGroup.mockImplementationOnce((requests: any[]) => {
+      return createMockRequestGroup({
+        then: jest.fn(function (cb) {
+          while (requests.length > 0) {
+            requests.shift()?.send();
+          }
+          cb([]);
+        })
+      });
+    });
+
+    const token401Response = () => createResponse({
+      status: 401,
+      text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+    })
+
+    request
+      // 1. First unsubscribe returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request - fire success immediately
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t2"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+          }))
+          return this
+        }),
+      }))
+      // 3. Retry unsubscribe (retrying=true) - also returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+        send: jest.fn(),
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', unsubscribe: '/unsubscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {} }
+
+    socket.unsubscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Only 3 requests: first unsubscribe + reconnect connect + retry unsubscribe. No further reconnects.
+    expect(request).toHaveBeenCalledTimes(3)
+    expect(request).toHaveBeenCalledWith('POST', '/unsubscribe')
+    expect(request).toHaveBeenCalledWith('POST', '/connect')
+    expect(request).not.toHaveBeenCalledWith('POST', '/subscribe')
+    pollSpy.mockRestore()
   })
 })
 
@@ -865,7 +1232,7 @@ describe('off', () => {
 
 describe('emit', () => {
   it('queues request', () => {
-    const mockSend = jest.fn(), mockData = jest.fn()
+    const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     request.mockImplementation(() : any => createMockRequest({
       data: mockData,
       send: mockSend,
@@ -881,15 +1248,13 @@ describe('emit', () => {
   })
 
   it('sends request immediately', () => {
-    const mockSend = jest.fn(), mockData = jest.fn()
+    const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
     request.mockImplementation(() : any => createMockRequest({
       data: mockData,
       send: mockSend,
       success: jest.fn(function (this: Request, cb) {
         const xhr = createResponse({
-          headers: {
-            get: jest.fn().mockReturnValue('1'),
-          },
+          headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
         })
         cb(xhr)
 
@@ -905,6 +1270,181 @@ describe('emit', () => {
     expect(request).toHaveBeenCalledWith('POST', route)
     expect(mockData).toHaveBeenCalledWith({ channel_name: 'channel1', data: {}, event: 'typing' })
     expect(mockSend).toHaveBeenCalledTimes(1)
+  })
+
+  it('reconnects, resubscribes and replays publish on 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+    let reconnectSuccessCb: ((xhr: Response) => void) | null = null;
+    const mockSubscribeSend = jest.fn()
+    const mockPublishSend = jest.fn()
+
+    requestGroup
+      .mockImplementationOnce((requests: any[]) => {
+        return createMockRequestGroup({
+          then: jest.fn(function (cb) {
+            while (requests.length > 0) {
+              requests.shift()?.send();
+            }
+            cb([]);
+          })
+        });
+      });
+
+    request
+      // 1. emit (publish) returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          const xhr = createResponse({
+            status: 401,
+            text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+          })
+          cb(xhr)
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          reconnectSuccessCb = cb;
+          return this
+        }),
+      }))
+      // 3. Subscribe queued during reconnect (afterReconnect resubscribes channels)
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
+          return this
+        }),
+        send: mockSubscribeSend,
+      }))
+      // 4. Publish replayed after reconnect (also queued via emit)
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
+          return this
+        }),
+        send: mockPublishSend,
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', publish: '/publish', subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    const cb = () => {}
+    socket['channels'] = { channel1: { new_message: [cb] } }
+
+    socket.emit('channel1', 'typing', {})
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(reconnectSuccessCb).not.toBeNull()
+    reconnectSuccessCb!(createResponse({
+      text: jest.fn().mockResolvedValue('{"status": "success", "time": "new-time"}'),
+      headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+    }))
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Subscribe should have been sent (resubscribe all channels)
+    expect(mockSubscribeSend).toHaveBeenCalledTimes(1)
+    expect(request).toHaveBeenCalledWith('POST', '/subscribe')
+    // Publish should have been replayed
+    expect(mockPublishSend).toHaveBeenCalledTimes(1)
+    expect(request).toHaveBeenCalledWith('POST', '/publish')
+    expect(socket['lastRequestTime']).toBe('2021-06-22 00:00:00')
+    pollSpy.mockRestore()
+  })
+
+  it('ignores 401 that is not TOKEN_EXPIRED', async () => {
+    request.mockImplementation(() : any => createMockRequest({
+      fail: jest.fn(function (this: Request, cb) {
+        const xhr = createResponse({
+          status: 401,
+          text: jest.fn().mockResolvedValue('{"data": {"code": "UNAUTHORIZED"}}'),
+        })
+        cb(xhr)
+        return this
+      }),
+    }))
+
+    const socket = new Socket({ routes: { publish: '/publish' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {} }
+
+    socket.emit('channel1', 'typing', {})
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Only the one publish request, no reconnect
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not loop if the retry also receives a 401 expired token', async () => {
+    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
+
+    requestGroup.mockImplementationOnce((requests: any[]) => {
+      return createMockRequestGroup({
+        then: jest.fn(function (cb) {
+          while (requests.length > 0) {
+            requests.shift()?.send();
+          }
+          cb([]);
+        })
+      });
+    });
+
+    const token401Response = () => createResponse({
+      status: 401,
+      text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
+    })
+
+    request
+      // 1. First emit (publish) returns 401 TOKEN_EXPIRED
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+      }))
+      // 2. Reconnect connect request - fire success immediately
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          cb(createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t2"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
+          }))
+          return this
+        }),
+      }))
+      // 3. Subscribe retry (retrying=true) - also gets 401 TOKEN_EXPIRED but no fail handler
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+        send: jest.fn(),
+      }))
+      // 4. Publish retry (retrying=true) - also gets 401 TOKEN_EXPIRED but no fail handler
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          cb(token401Response())
+          return this
+        }),
+        send: jest.fn(),
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect', publish: '/publish', subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {} }
+
+    socket.emit('channel1', 'typing', {})
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // 4 requests total: first publish + reconnect connect + retry subscribe + retry publish. No further reconnects.
+    expect(request).toHaveBeenCalledTimes(4)
+    expect(request).toHaveBeenCalledWith('POST', '/connect')
+    expect(request).toHaveBeenCalledWith('POST', '/subscribe')
+    expect(request).toHaveBeenCalledWith('POST', '/publish')
+    pollSpy.mockRestore()
   })
 })
 
@@ -1009,9 +1549,7 @@ describe('disconnect', () => {
         success: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
             text: jest.fn().mockResolvedValue('{"status": "success"}'),
-            headers: {
-              get: jest.fn().mockReturnValue('...'),
-            },
+            headers: createHeaders({ get: jest.fn().mockReturnValue('...') }),
           })
           cb(xhr)
 
@@ -1022,7 +1560,7 @@ describe('disconnect', () => {
       .mockImplementationOnce(() : any => createMockRequest({
         always: jest.fn(function (this: Request, cb) {
           socket.disconnect()
-          cb(createResponse())
+          cb()
 
           return this
         }),
