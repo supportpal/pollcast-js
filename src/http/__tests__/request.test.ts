@@ -224,15 +224,22 @@ describe('successful requests', () => {
     expect(alwaysCallback).toHaveBeenCalledTimes(1);
   });
 
-  it('can abort request', () => {
+  it('can abort request', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
     const request = new Request('GET', 'some/url')
     request.send()
     request.abort()
+
+    // Wait for the aborted fetch to reject
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     // Verify that the request was initiated with an AbortController
     expect(mockFetch).toHaveBeenCalledWith('some/url', expect.objectContaining({
       signal: expect.any(AbortSignal)
     }))
+
+    consoleErrorSpy.mockRestore()
   })
 
   it('fail callback does not run on status 200', async () => {
@@ -431,12 +438,15 @@ describe('aborted requests', () => {
     expect(failCallback).not.toHaveBeenCalled()
     // Always callback should still be triggered
     expect(alwaysCallback).toHaveBeenCalledTimes(1)
+    // AbortErrors are still logged since they go through the generic error handler
     expect(consoleErrorSpy).toHaveBeenCalledWith('Pollcast request error.', expect.any(Error))
 
     consoleErrorSpy.mockRestore()
   })
 
   it('does not dispatch event when request is aborted', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
     let eventDispatched = false
     const handler = () => {
       eventDispatched = true
@@ -457,6 +467,7 @@ describe('aborted requests', () => {
     expect(eventDispatched).toBe(false)
 
     document.removeEventListener('pollcast:request-error', handler)
+    consoleErrorSpy.mockRestore()
   })
 })
 
