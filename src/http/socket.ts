@@ -295,8 +295,8 @@ export class Socket {
       })
       .always(() => {
         // only if the socket is active
+        /* istanbul ignore next */
         if (this.id !== '') {
-          /* istanbul ignore next */
           self.timer = setTimeout(() => self.poll(), self.options.polling)
         }
       })

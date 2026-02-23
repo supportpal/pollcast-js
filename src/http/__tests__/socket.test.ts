@@ -490,6 +490,51 @@ describe('poll', () => {
     expect(request).toHaveBeenCalledTimes(2)
   })
 
+  it('poll fail callback does nothing on 401 if response body is not valid JSON', async () => {
+    requestGroup.mockImplementationOnce(() => createMockRequestGroup());
+    request
+      // connect implementation
+      .mockImplementationOnce(() : any => createMockRequest({
+        success: jest.fn(function (this: Request, cb) {
+          const xhr = createResponse({
+            text: jest.fn().mockResolvedValue('{"status": "success"}'),
+            headers: createHeaders({ get: jest.fn().mockReturnValue('1') }),
+          })
+          cb(xhr)
+          return this
+        })
+      }))
+      // poll implementation - returns 401 with a body that throws on .json()
+      .mockImplementationOnce(() : any => createMockRequest({
+        fail: jest.fn(function (this: Request, cb) {
+          const xhr = createResponse({
+            status: 401,
+            text: jest.fn().mockResolvedValue('not-json'),
+          })
+          // Override json() to reject
+          xhr.json = jest.fn().mockRejectedValue(new SyntaxError('Unexpected token'))
+          cb(xhr)
+          return this
+        })
+      }))
+
+    const socket = new Socket({ routes: { connect: '/connect' } })
+
+    WindowVisibility.setActive()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: { new_message: [() => {}] } },
+      writable: true
+    })
+
+    socket.connect()
+
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Should only be called twice: initial connect and poll (no reconnect)
+    expect(request).toHaveBeenCalledTimes(2)
+  })
+
   it('does not loop if the resubscribe after poll 401 TOKEN_EXPIRED also receives a 401', async () => {
     requestGroup
       // First connect - empty queue
