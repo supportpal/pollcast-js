@@ -1,3 +1,9 @@
+## [3.1.0](https://github.com/supportpal/pollcast-js/compare/v3.0.1...v3.1.0) (2026-02-23)
+
+### Features
+
+* perform reconnection on token expiration on all relevant routes ([#632](https://github.com/supportpal/pollcast-js/issues/632)) ([062f3c9](https://github.com/supportpal/pollcast-js/commit/062f3c9accbd498bbe557f6f3479c656e72454bd))
+
 ## [3.0.1](https://github.com/supportpal/pollcast-js/compare/v3.0.0...v3.0.1) (2026-02-17)
 
 ### Bug Fixes
