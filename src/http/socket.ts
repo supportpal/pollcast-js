@@ -89,7 +89,7 @@ export class Socket {
     })
 
     if (!retrying) {
-      request.fail(async (response: Response) => this.handleTokenExpired(response))
+      request.fail(async (response: Response) => this.handleTokenExpired(response));
     }
 
     if (this.lastRequestTime !== '') {
@@ -102,21 +102,14 @@ export class Socket {
   /**
    * Leave a channel.
    */
-  unsubscribe (channel: string, retrying: boolean = false): void {
+  unsubscribe (channel: string): void {
     const self = this
     const request = this.createRequest('POST', this.options.routes.unsubscribe)
     request
       .setKeepAlive(true)
       .data({channel_name: channel})
       .success(() => delete self.channels[channel])
-
-    if (!retrying) {
-      request.fail(async (response: Response) => this.handleTokenExpired(response, () => {
-        self.unsubscribe(channel, true);
-      }))
-    }
-
-    request.send()
+      .send()
   }
 
   /**
@@ -165,10 +158,7 @@ export class Socket {
 
     if (!retrying) {
       request.fail(async (response: Response) => this.handleTokenExpired(response, () => {
-        // Resubscribe all channels, then re-queue the publish so it runs after reconnect
-        for (const ch of Object.keys(self.channels)) {
-          self.subscribe(ch, true);
-        }
+        // Retry the emit.
         self.emit(channel, event, data, true);
       }))
     }
@@ -240,12 +230,12 @@ export class Socket {
     // Pass savedLastRequestTime so the next poll fetches messages since the last successful poll
     this.connect(savedLastRequestTime);
 
+    for (const channel of channelsToResubscribe) {
+      this.subscribe(channel, true);
+    }
+
     if (afterReconnect) {
       afterReconnect();
-    } else {
-      for (const channel of channelsToResubscribe) {
-        this.subscribe(channel, true);
-      }
     }
 
     return true;

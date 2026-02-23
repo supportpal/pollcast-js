@@ -783,7 +783,7 @@ describe('subscribe', () => {
     const mockSubscribeSend = jest.fn()
 
     requestGroup
-      // Second connect (after 401 reconnect) - has subscribe in queue
+      // Reconnect connect - processes queued subscribe (added by handleTokenExpired loop)
       .mockImplementationOnce((requests: any[]) => {
         return createMockRequestGroup({
           then: jest.fn(function (cb) {
@@ -796,7 +796,7 @@ describe('subscribe', () => {
       });
 
     request
-      // 1. subscribe that returns 401 TOKEN_EXPIRED
+      // 1. Subscribe that returns 401 TOKEN_EXPIRED
       .mockImplementationOnce(() : any => createMockRequest({
         fail: jest.fn(function (this: Request, cb) {
           const xhr = createResponse({
@@ -807,14 +807,14 @@ describe('subscribe', () => {
           return this
         }),
       }))
-      // 2. Reconnect connect request - hold success callback
+      // 2. Reconnect connect request - hold success callback so we control timing
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
           reconnectSuccessCb = cb;
           return this
         }),
       }))
-      // 3. Subscribe queued during reconnect
+      // 3. Retry subscribe queued by handleTokenExpired loop (retrying=true, no fail handler)
       .mockImplementationOnce(() : any => createMockRequest({
         success: jest.fn(function (this: Request, cb) {
           cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
@@ -832,7 +832,7 @@ describe('subscribe', () => {
 
     await new Promise(resolve => setTimeout(resolve, 10))
 
-    // Fire the reconnect success callback
+    // Fire the reconnect success callback - this processes the queued retry subscribe
     expect(reconnectSuccessCb).not.toBeNull()
     reconnectSuccessCb!(createResponse({
       text: jest.fn().mockResolvedValue('{"status": "success", "time": "new-time"}'),
@@ -845,6 +845,10 @@ describe('subscribe', () => {
     expect(socket.subscribed).toEqual({ channel1: { new_message: [cb] } })
     // lastRequestTime should be preserved from before the disconnect
     expect(socket['lastRequestTime']).toBe('2021-06-22 00:00:00')
+    // handleTokenExpired loop resubscribes: subscribe + reconnect connect + retry subscribe
+    expect(request).toHaveBeenCalledTimes(3)
+    expect(request).toHaveBeenCalledWith('POST', '/connect')
+    expect(request).toHaveBeenCalledWith('POST', '/subscribe')
     pollSpy.mockRestore()
   })
 
@@ -989,86 +993,10 @@ describe('Unsubscribe', () => {
     expect(socket.subscribed).toEqual(channels)
   })
 
-  it('reconnects and re-runs unsubscribe on 401 expired token', async () => {
-    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
-    let reconnectSuccessCb: ((xhr: Response) => void) | null = null;
-    const mockUnsubscribeSend = jest.fn()
-
-    requestGroup
-      .mockImplementationOnce((requests: any[]) => {
-        return createMockRequestGroup({
-          then: jest.fn(function (cb) {
-            while (requests.length > 0) {
-              requests.shift()?.send();
-            }
-            cb([]);
-          })
-        });
-      });
-
-    request
-      // 1. unsubscribe returns 401 TOKEN_EXPIRED
-      .mockImplementationOnce(() : any => createMockRequest({
-        fail: jest.fn(function (this: Request, cb) {
-          const xhr = createResponse({
-            status: 401,
-            text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
-          })
-          cb(xhr)
-          return this
-        }),
-      }))
-      // 2. Reconnect connect request
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          reconnectSuccessCb = cb;
-          return this
-        }),
-      }))
-      // 3. Unsubscribe re-run after reconnect (queued)
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          cb(createResponse({ headers: createHeaders({ get: jest.fn().mockReturnValue('2') }) }))
-          return this
-        }),
-        send: mockUnsubscribeSend,
-      }))
-
-    const socket = new Socket({ routes: { connect: '/connect', unsubscribe: '/unsubscribe' } })
-    socket['lastRequestTime'] = '2021-06-22 00:00:00'
-    const cb = () => {}
-    socket['channels'] = { channel1: { new_message: [cb] } }
-
-    socket.unsubscribe('channel1')
-
-    await new Promise(resolve => setTimeout(resolve, 10))
-
-    expect(reconnectSuccessCb).not.toBeNull()
-    reconnectSuccessCb!(createResponse({
-      text: jest.fn().mockResolvedValue('{"status": "success", "time": "new-time"}'),
-      headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
-    }))
-
-    await new Promise(resolve => setTimeout(resolve, 10))
-
-    // Should have called unsubscribe again (not subscribe)
-    expect(mockUnsubscribeSend).toHaveBeenCalledTimes(1)
-    expect(request).toHaveBeenCalledWith('POST', '/unsubscribe')
-    expect(request).not.toHaveBeenCalledWith('POST', '/subscribe')
-    expect(socket['lastRequestTime']).toBe('2021-06-22 00:00:00')
-    pollSpy.mockRestore()
-  })
-
-  it('ignores 401 that is not TOKEN_EXPIRED', async () => {
+  it('does not handle 401 expired token', async () => {
+    const mockSend = jest.fn()
     request.mockImplementation(() : any => createMockRequest({
-      fail: jest.fn(function (this: Request, cb) {
-        const xhr = createResponse({
-          status: 401,
-          text: jest.fn().mockResolvedValue('{"data": {"code": "UNAUTHORIZED"}}'),
-        })
-        cb(xhr)
-        return this
-      }),
+      send: mockSend,
     }))
 
     const socket = new Socket({ routes: { unsubscribe: '/unsubscribe' } })
@@ -1078,70 +1006,11 @@ describe('Unsubscribe', () => {
 
     await new Promise(resolve => setTimeout(resolve, 10))
 
-    // Only the one unsubscribe request, no reconnect
+    // Unsubscribe has no fail handler for token expiry - only one request is ever made,
+    // no reconnect or resubscribe is triggered
     expect(request).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not loop if the retry also receives a 401 expired token', async () => {
-    const pollSpy = jest.spyOn(Socket.prototype as any, 'poll').mockImplementation(() => {})
-
-    requestGroup.mockImplementationOnce((requests: any[]) => {
-      return createMockRequestGroup({
-        then: jest.fn(function (cb) {
-          while (requests.length > 0) {
-            requests.shift()?.send();
-          }
-          cb([]);
-        })
-      });
-    });
-
-    const token401Response = () => createResponse({
-      status: 401,
-      text: jest.fn().mockResolvedValue('{"status": "error", "data": {"code": "TOKEN_EXPIRED"}}'),
-    })
-
-    request
-      // 1. First unsubscribe returns 401 TOKEN_EXPIRED
-      .mockImplementationOnce(() : any => createMockRequest({
-        fail: jest.fn(function (this: Request, cb) {
-          cb(token401Response())
-          return this
-        }),
-      }))
-      // 2. Reconnect connect request - fire success immediately
-      .mockImplementationOnce(() : any => createMockRequest({
-        success: jest.fn(function (this: Request, cb) {
-          cb(createResponse({
-            text: jest.fn().mockResolvedValue('{"status": "success", "time": "t2"}'),
-            headers: createHeaders({ get: jest.fn().mockReturnValue('socket-2') }),
-          }))
-          return this
-        }),
-      }))
-      // 3. Retry unsubscribe (retrying=true) - also returns 401 TOKEN_EXPIRED
-      .mockImplementationOnce(() : any => createMockRequest({
-        fail: jest.fn(function (this: Request, cb) {
-          cb(token401Response())
-          return this
-        }),
-        send: jest.fn(),
-      }))
-
-    const socket = new Socket({ routes: { connect: '/connect', unsubscribe: '/unsubscribe' } })
-    socket['lastRequestTime'] = '2021-06-22 00:00:00'
-    socket['channels'] = { channel1: {} }
-
-    socket.unsubscribe('channel1')
-
-    await new Promise(resolve => setTimeout(resolve, 10))
-
-    // Only 3 requests: first unsubscribe + reconnect connect + retry unsubscribe. No further reconnects.
-    expect(request).toHaveBeenCalledTimes(3)
     expect(request).toHaveBeenCalledWith('POST', '/unsubscribe')
-    expect(request).toHaveBeenCalledWith('POST', '/connect')
-    expect(request).not.toHaveBeenCalledWith('POST', '/subscribe')
-    pollSpy.mockRestore()
+    expect(mockSend).toHaveBeenCalledTimes(1)
   })
 })
 
