@@ -37,7 +37,7 @@
     "@eslint/js": "^10.0.1",
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
     "@rollup/plugin-typescript": "^12.1.1",
     "@stylistic/eslint-plugin": "^5.2.0",
     "@tsconfig/recommended": "^1.0.1",
