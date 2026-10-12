@@ -40,6 +40,11 @@ export class Socket {
    */
   private channels: { [name: string]: { [event: string]: ((data: any) => void)[] } } = {}
 
+  /**
+   * Members of each presence channel, keyed by user id.
+   */
+  private members: { [channel: string]: { [userId: string]: any } } = {}
+
   private storage : LocalStorage = new LocalStorage('socket')
 
   constructor (options: any) {
@@ -88,6 +93,14 @@ export class Socket {
       channel_name: channel,
     })
 
+    // Stop polling for a channel we're not allowed in, or the poll reports it missing and we subscribe again.
+    request.fail((response: Response) => {
+      if (response.status === 403) {
+        delete this.channels[channel]
+        delete this.members[channel]
+      }
+    })
+
     if (!retrying) {
       request.fail(async (response: Response) => this.handleTokenExpired(response));
     }
@@ -108,7 +121,10 @@ export class Socket {
     request
       .setKeepAlive(true)
       .data({channel_name: channel})
-      .success(() => delete self.channels[channel])
+      .success(() => {
+        delete self.channels[channel]
+        delete self.members[channel]
+      })
       .send()
   }
 
@@ -317,7 +333,56 @@ export class Socket {
 
     Object.keys(data.events).forEach((event) => {
       const item = data.events[event]
+      if (item.event === 'pollcast:subscription_succeeded' && Array.isArray(item.payload)) {
+        this.members[item.channel.name] = this.keyMembers(item.payload)
+      } else if (data.members && (item.event === 'pollcast:member_added' || item.event === 'pollcast:member_removed')) {
+        // The member list is kept in sync below instead, as it also drops members which stopped polling.
+        return
+      }
+
       this.dispatch(item.channel.name, item.event, item.payload)
     })
+
+    Object.keys(data.members || {}).forEach((channel) => this.syncMembers(channel, data.members[channel]))
+
+    // Subscribe again to channels the server no longer has us in, for example after a long time in the background.
+    const missing: string[] = data.missing || []
+    missing.forEach((channel) => {
+      if (Object.hasOwnProperty.call(this.channels, channel)) {
+        this.subscribe(channel)
+      }
+    })
+  }
+
+  /**
+   * Fire member added and removed events for the differences to the presence channel's latest member list.
+   * Members are compared by user, so a user with more than one connection only leaves when all of them have.
+   */
+  private syncMembers (channel: string, members: any[]): void {
+    const latest = this.keyMembers(members)
+    const current = this.members[channel] ?? latest
+
+    Object.keys(latest).forEach((id) => {
+      if (!Object.hasOwnProperty.call(current, id)) {
+        this.dispatch(channel, 'pollcast:member_added', latest[id])
+      }
+    })
+
+    Object.keys(current).forEach((id) => {
+      if (!Object.hasOwnProperty.call(latest, id)) {
+        this.dispatch(channel, 'pollcast:member_removed', current[id])
+      }
+    })
+
+    this.members[channel] = latest
+  }
+
+  private keyMembers (members: any[]): { [userId: string]: any } {
+    const keyed: { [userId: string]: any } = {}
+    members.forEach((member) => {
+      keyed[member.user_id] = member
+    })
+
+    return keyed
   }
 }

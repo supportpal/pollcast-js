@@ -762,6 +762,88 @@ describe('poll', () => {
   })
 })
 
+describe('presence members', () => {
+  const fireEvents = (socket: Socket, data: any) =>
+    socket['fireEvents'](createResponse({ text: jest.fn().mockResolvedValue(JSON.stringify({ status: 'success', time: '', events: [], ...data })) }))
+
+  const joined = (members: any[]) => ({
+    events: [{ event: 'pollcast:subscription_succeeded', channel: { name: 'presence-channel' }, payload: members }],
+  })
+
+  it('fires member events for changes to the member list', async () => {
+    const socket = new Socket({})
+    socket.dispatch = jest.fn()
+
+    await fireEvents(socket, joined([{ user_id: 1 }, { user_id: 2 }]))
+    await fireEvents(socket, { members: { 'presence-channel': [{ user_id: 1 }, { user_id: 3 }] } })
+
+    expect(socket.dispatch).toHaveBeenCalledWith('presence-channel', 'pollcast:member_added', { user_id: 3 })
+    expect(socket.dispatch).toHaveBeenCalledWith('presence-channel', 'pollcast:member_removed', { user_id: 2 })
+    expect(socket.dispatch).toHaveBeenCalledTimes(3)
+  })
+
+  it('keeps a user with another connection', async () => {
+    const socket = new Socket({})
+    socket.dispatch = jest.fn()
+
+    await fireEvents(socket, joined([{ user_id: 1 }, { user_id: 2 }, { user_id: 2 }]))
+    await fireEvents(socket, { members: { 'presence-channel': [{ user_id: 1 }, { user_id: 2 }] } })
+
+    expect(socket.dispatch).toHaveBeenCalledTimes(1)
+  })
+
+  it('takes the first member list as is if it has not joined yet', async () => {
+    const socket = new Socket({})
+    socket.dispatch = jest.fn()
+
+    await fireEvents(socket, { members: { 'presence-channel': [{ user_id: 1 }] } })
+    await fireEvents(socket, { members: { 'presence-channel': [] } })
+
+    expect(socket.dispatch).toHaveBeenCalledTimes(1)
+    expect(socket.dispatch).toHaveBeenCalledWith('presence-channel', 'pollcast:member_removed', { user_id: 1 })
+  })
+
+  it('ignores member events in favour of the member list', async () => {
+    const socket = new Socket({})
+    socket.dispatch = jest.fn()
+
+    await fireEvents(socket, {
+      events: [
+        { event: 'pollcast:member_added', channel: { name: 'presence-channel' }, payload: { user_id: 2 } },
+        { event: 'pollcast:member_removed', channel: { name: 'presence-channel' }, payload: { user_id: 2 } },
+      ],
+      members: {},
+    })
+
+    expect(socket.dispatch).not.toHaveBeenCalled()
+  })
+
+  it('fires member events from servers which do not send the member list', async () => {
+    const socket = new Socket({})
+    socket.dispatch = jest.fn()
+
+    await fireEvents(socket, {
+      events: [{ event: 'pollcast:member_added', channel: { name: 'presence-channel' }, payload: { user_id: 2 } }],
+    })
+
+    expect(socket.dispatch).toHaveBeenCalledWith('presence-channel', 'pollcast:member_added', { user_id: 2 })
+  })
+
+  it('subscribes again to missing channels', async () => {
+    const socket = new Socket({})
+    socket.subscribe = jest.fn()
+    Object.defineProperty(socket, 'channels', {
+      value: { channel1: {} },
+      writable: true,
+    })
+
+    await fireEvents(socket, { missing: ['channel1', 'channel2'] })
+
+    expect(socket.subscribe).toHaveBeenCalledTimes(1)
+    expect(socket.subscribe).toHaveBeenCalledWith('channel1')
+  })
+})
+
 describe('subscribe', () => {
   it('sends request', () => {
     const mockSend = jest.fn(), mockData = jest.fn().mockReturnThis()
@@ -895,6 +977,27 @@ describe('subscribe', () => {
     expect(request).toHaveBeenCalledWith('POST', '/connect')
     expect(request).toHaveBeenCalledWith('POST', '/subscribe')
     pollSpy.mockRestore()
+  })
+
+  it('drops the channel when access is refused', async () => {
+    request.mockImplementation(() : any => createMockRequest({
+      fail: jest.fn(function (this: Request, cb) {
+        cb(createResponse({ status: 403 }))
+        return this
+      }),
+    }))
+
+    const socket = new Socket({ routes: { subscribe: '/subscribe' } })
+    socket['lastRequestTime'] = '2021-06-22 00:00:00'
+    socket['channels'] = { channel1: {}, channel2: {} }
+    socket['members'] = { channel1: {} }
+
+    socket.subscribe('channel1')
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(socket.subscribed).toEqual({ channel2: {} })
+    expect(socket['members']).toEqual({})
   })
 
   it('ignores 401 that is not TOKEN_EXPIRED', async () => {
