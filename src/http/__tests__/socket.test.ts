@@ -1002,40 +1002,23 @@ describe('Unsubscribe', () => {
     expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
     expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
     expect(mockRequest.send).toHaveBeenCalled()
-
-    // Simulate successful response
-    // Note: createRequest adds a success callback for socket ID extraction,
-    // and unsubscribe adds another one for channel deletion
-    const socketIdCallback = mockRequest.success.mock.calls[0][0]
-    const channelDeletionCallback = mockRequest.success.mock.calls[1][0]
-    socketIdCallback(createResponse())
-    channelDeletionCallback(createResponse())
-
     expect(socket.subscribed).toEqual({})
   })
 
-  it('send request fails', () => {
-    const route = '/unsubscribe'; const channel = 'channel1'
-
-    const channels : any = {}
-    channels[channel] = {}
-
+  it('keeps the channel when it is joined again before the request completes', () => {
     const mockRequest = createMockRequest()
     request.mockImplementation(() => mockRequest)
 
-    const socket = new Socket({ routes: { unsubscribe: route } })
-    Object.defineProperty(socket, 'channels', { value: channels, writable: true })
+    const socket = new Socket({ routes: { unsubscribe: '/unsubscribe', subscribe: '/subscribe' } })
+    socket['channels'] = { channel1: {} }
 
-    expect(socket.subscribed).toEqual(channels)
-    socket.unsubscribe(channel)
+    socket.unsubscribe('channel1')
+    socket.subscribe('channel1')
 
-    expect(mockRequest.setKeepAlive).toHaveBeenCalledWith(true)
-    expect(mockRequest.data).toHaveBeenCalledWith({ channel_name: channel })
-    expect(mockRequest.send).toHaveBeenCalled()
+    // Complete the unsubscribe request.
+    mockRequest.success.mock.calls.forEach(([cb]: any) => cb(createResponse()))
 
-    // Simulate failed response - success callback is not called
-    // So channel should remain subscribed
-    expect(socket.subscribed).toEqual(channels)
+    expect(socket.subscribed).toEqual({ channel1: {} })
   })
 
   it('does not handle 401 expired token', async () => {

@@ -103,12 +103,13 @@ export class Socket {
    * Leave a channel.
    */
   unsubscribe (channel: string): void {
-    const self = this
-    const request = this.createRequest('POST', this.options.routes.unsubscribe)
-    request
+    // Forget the channel straight away rather than when the request succeeds, which may only be after the channel
+    // has been joined again, e.g. a page restored from the back/forward cache.
+    delete this.channels[channel]
+
+    this.createRequest('POST', this.options.routes.unsubscribe)
       .setKeepAlive(true)
       .data({channel_name: channel})
-      .success(() => delete self.channels[channel])
       .send()
   }
 
