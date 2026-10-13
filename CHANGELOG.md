@@ -1,3 +1,9 @@
+## [3.1.1](https://github.com/supportpal/pollcast-js/compare/v3.1.0...v3.1.1) (2026-10-13)
+
+### Bug Fixes
+
+* keep a channel joined again before its unsubscribe completes ([#661](https://github.com/supportpal/pollcast-js/issues/661)) ([a9faf94](https://github.com/supportpal/pollcast-js/commit/a9faf94722e70b31048beef517933e302af3c14c))
+
 ## [3.1.0](https://github.com/supportpal/pollcast-js/compare/v3.0.1...v3.1.0) (2026-02-23)
 
 ### Features
