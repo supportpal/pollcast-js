@@ -39,7 +39,7 @@
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^1.0.0",
     "@rollup/plugin-typescript": "^12.1.1",
-    "@stylistic/eslint-plugin": "^5.2.0",
+    "@stylistic/eslint-plugin": "^6.0.0",
     "@tsconfig/recommended": "^1.0.1",
     "@types/jest": "^30.0.0",
     "bundlewatch": "^0.4.0",
